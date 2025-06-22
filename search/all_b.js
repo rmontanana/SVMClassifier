@@ -1,0 +1,9 @@
+var searchData=
+[
+  ['precision_0',['precision',['../structsvm__classifier_1_1EvaluationMetrics.html#ad2ee81c9b36abcfb04598110402c242f',1,'svm_classifier::EvaluationMetrics']]],
+  ['predict_1',['predict',['../classsvm__classifier_1_1MulticlassStrategyBase.html#a70f94cfcf8b2bf6d60133c688fe55f9d',1,'svm_classifier::MulticlassStrategyBase::predict()'],['../classsvm__classifier_1_1OneVsRestStrategy.html#a771903a821d5380ddd5d0b3a912e7df9',1,'svm_classifier::OneVsRestStrategy::predict()'],['../classsvm__classifier_1_1OneVsOneStrategy.html#ab60df2d9b6069a73369b0bf9d3675662',1,'svm_classifier::OneVsOneStrategy::predict()'],['../classsvm__classifier_1_1SVMClassifier.html#a5c998d5574b3b6afe003b23ed02ed1d1',1,'svm_classifier::SVMClassifier::predict()']]],
+  ['predict_5fproba_2',['predict_proba',['../classsvm__classifier_1_1MulticlassStrategyBase.html#ab5348ee3b83547702ec7903ee7ee2da7',1,'svm_classifier::MulticlassStrategyBase::predict_proba()'],['../classsvm__classifier_1_1OneVsRestStrategy.html#a55639e5adaadcd6414b50d5ebf0d1cd2',1,'svm_classifier::OneVsRestStrategy::predict_proba()'],['../classsvm__classifier_1_1OneVsOneStrategy.html#ae62e8b24115042d1119e76f3302f6992',1,'svm_classifier::OneVsOneStrategy::predict_proba()'],['../classsvm__classifier_1_1SVMClassifier.html#ab4ef3c839e085ece646cdd2501a51f67',1,'svm_classifier::SVMClassifier::predict_proba()']]],
+  ['predictionresult_3',['PredictionResult',['../structsvm__classifier_1_1PredictionResult.html',1,'svm_classifier']]],
+  ['predictions_4',['predictions',['../structsvm__classifier_1_1PredictionResult.html#a1a3e5f634777de08f2e6cd71ee4e8891',1,'svm_classifier::PredictionResult']]],
+  ['probabilities_5',['probabilities',['../structsvm__classifier_1_1PredictionResult.html#a22d86775346acc5545affd204eba47fd',1,'svm_classifier::PredictionResult']]]
+];

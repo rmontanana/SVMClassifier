@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classsvm__classifier_1_1MulticlassStrategyBase.html" title="Abstract base class for multiclass classification strategies." alt="" coords="5,37,195,77"/>
+<area shape="rect" id="Node000001" href="$classsvm__classifier_1_1OneVsOneStrategy.html" title="One&#45;vs&#45;One (OvO) multiclass strategy." alt="" coords="245,5,435,45"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="208,40,244,35,245,41,209,46"/>
+<area shape="rect" id="Node000002" href="$classsvm__classifier_1_1OneVsRestStrategy.html" title="One&#45;vs&#45;Rest (OvR) multiclass strategy." alt="" coords="243,69,437,109"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="209,69,243,74,242,79,208,74"/>
+</map>

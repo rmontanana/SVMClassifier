@@ -1,0 +1,5 @@
+<map id="svm_classifier::OneVsOneStrategy" name="svm_classifier::OneVsOneStrategy">
+<area shape="rect" id="Node000001" title="One&#45;vs&#45;One (OvO) multiclass strategy." alt="" coords="5,93,196,133"/>
+<area shape="rect" id="Node000002" href="$classsvm__classifier_1_1MulticlassStrategyBase.html" title="Abstract base class for multiclass classification strategies." alt="" coords="6,5,195,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="103,59,103,93,98,93,98,59"/>
+</map>
