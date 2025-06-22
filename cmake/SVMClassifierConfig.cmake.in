@@ -1,0 +1,39 @@
+# SVMClassifierConfig.cmake.in
+# CMake configuration file for SVMClassifier package
+
+@PACKAGE_INIT@
+
+# Set the version
+set(SVMClassifier_VERSION @PACKAGE_VERSION@)
+
+# Find required dependencies
+find_dependency(Torch REQUIRED)
+find_dependency(PkgConfig REQUIRED)
+
+# Include nlohmann_json
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    find_package(nlohmann_json 3.11.0 REQUIRED)
+endif()
+
+# Include the targets file
+include("${CMAKE_CURRENT_LIST_DIR}/SVMClassifierTargets.cmake")
+
+# Set variables for backward compatibility
+set(SVMClassifier_LIBRARIES SVMClassifier::svm_classifier)
+set(SVMClassifier_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+
+# Verify that the targets were imported
+if(NOT TARGET SVMClassifier::svm_classifier)
+    message(FATAL_ERROR "SVMClassifier::svm_classifier target not found")
+endif()
+
+# Set found flag
+set(SVMClassifier_FOUND TRUE)
+
+# Print status message
+if(NOT SVMClassifier_FIND_QUIETLY)
+    message(STATUS "Found SVMClassifier: ${PACKAGE_PREFIX_DIR} (found version \"${SVMClassifier_VERSION}\")")
+endif()
+
+# Check version compatibility
+check_required_components(SVMClassifier)
