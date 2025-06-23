@@ -98,7 +98,7 @@ endif()
 # Add memory check with valgrind if available
 find_program(VALGRIND_EXECUTABLE valgrind)
 if(VALGRIND_EXECUTABLE)
-    add_custom_target(test_memcheck
+    add_custom_target(tests_memcheck
         COMMAND ${VALGRIND_EXECUTABLE} --tool=memcheck --leak-check=full --show-leak-kinds=all 
                 --track-origins=yes --verbose --error-exitcode=1 
                 $<TARGET_FILE:svm_classifier_tests>
@@ -106,20 +106,20 @@ if(VALGRIND_EXECUTABLE)
         COMMENT "Running tests with valgrind memory check"
     )
     
-    message(STATUS "Memory check target 'test_memcheck' available")
+    message(STATUS "Memory check target 'tests_memcheck' available")
 endif()
 
 # Performance profiling with perf if available
 find_program(PERF_EXECUTABLE perf)
 if(PERF_EXECUTABLE)
-    add_custom_target(test_profile
+    add_custom_target(tests_profile
         COMMAND ${PERF_EXECUTABLE} record -g $<TARGET_FILE:svm_classifier_tests> [performance]
         COMMAND ${PERF_EXECUTABLE} report
         DEPENDS svm_classifier_tests
         COMMENT "Running performance tests with profiling"
     )
     
-    message(STATUS "Performance profiling target 'test_profile' available")
+    message(STATUS "Performance profiling target 'tests_profile' available")
 endif()
 
 # Set test properties
