@@ -283,7 +283,7 @@ TEST_CASE("SVMClassifier Prediction", "[integration][svm_classifier]")
         REQUIRE(predictions.size(0) == X_test.size(0));
 
         // Check that predictions are valid class labels
-        auto unique_preds = torch::unique(predictions);
+        auto unique_preds = std::get<0>(at::_unique(predictions));
         for (int i = 0; i < unique_preds.size(0); ++i) {
             int pred_class = unique_preds[i].item<int>();
             auto classes = svm.get_classes();

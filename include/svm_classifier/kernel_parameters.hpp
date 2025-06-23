@@ -1,195 +1,117 @@
 #pragma once
 
 #include "types.hpp"
-#include <torch/torch.h>
-#include <vector>
-#include <memory>
-
-// Forward declarations for libsvm and liblinear structures
-struct svm_node;
-struct svm_problem;
-struct feature_node;
-struct problem;
+#include <nlohmann/json.hpp>
 
 namespace svm_classifier {
 
     /**
-     * @brief Data converter between libtorch tensors and SVM library formats
+     * @brief Kernel parameters configuration class
      *
-     * This class handles the conversion between PyTorch tensors and the data structures
-     * required by libsvm and liblinear libraries. It manages memory allocation and
-     * provides efficient conversion methods.
+     * This class manages all parameters for SVM kernels including kernel type,
+     * regularization parameters, optimization settings, and kernel-specific parameters.
      */
-    class DataConverter {
+    class KernelParameters {
     public:
         /**
-         * @brief Default constructor
+         * @brief Default constructor with default parameters
          */
-        DataConverter();
+        KernelParameters();
 
         /**
-         * @brief Destructor - cleans up allocated memory
+         * @brief Constructor with JSON configuration
+         * @param config JSON configuration object
          */
-        ~DataConverter();
+        explicit KernelParameters(const nlohmann::json& config);
 
         /**
-         * @brief Convert PyTorch tensors to libsvm format
-         * @param X Feature tensor of shape (n_samples, n_features)
-         * @param y Target tensor of shape (n_samples,) - optional for prediction
-         * @return Pointer to svm_problem structure
+         * @brief Set parameters from JSON configuration
+         * @param config JSON configuration object
+         * @throws std::invalid_argument if parameters are invalid
          */
-        std::unique_ptr<svm_problem> to_svm_problem(const torch::Tensor& X,
-            const torch::Tensor& y = torch::Tensor());
+        void set_parameters(const nlohmann::json& config);
 
         /**
-         * @brief Convert PyTorch tensors to liblinear format
-         * @param X Feature tensor of shape (n_samples, n_features)
-         * @param y Target tensor of shape (n_samples,) - optional for prediction
-         * @return Pointer to problem structure
+         * @brief Get current parameters as JSON
+         * @return JSON object with current parameters
          */
-        std::unique_ptr<problem> to_linear_problem(const torch::Tensor& X,
-            const torch::Tensor& y = torch::Tensor());
+        nlohmann::json get_parameters() const;
+
+        // Kernel type
+        void set_kernel_type(KernelType kernel);
+        KernelType get_kernel_type() const { return kernel_type_; }
+
+        // Multiclass strategy
+        void set_multiclass_strategy(MulticlassStrategy strategy);
+        MulticlassStrategy get_multiclass_strategy() const { return multiclass_strategy_; }
+
+        // Common parameters
+        void set_C(double c);
+        double get_C() const { return C_; }
+
+        void set_tolerance(double tol);
+        double get_tolerance() const { return tolerance_; }
+
+        void set_max_iterations(int max_iter);
+        int get_max_iterations() const { return max_iterations_; }
+
+        void set_probability(bool probability);
+        bool get_probability() const { return probability_; }
+
+        void set_cache_size(double cache_size);
+        double get_cache_size() const { return cache_size_; }
+
+        // Kernel-specific parameters
+        void set_gamma(double gamma);
+        double get_gamma() const { return gamma_; }
+        bool is_gamma_auto() const { return gamma_ == -1.0; }
+        void set_gamma_auto();
+
+        void set_degree(int degree);
+        int get_degree() const { return degree_; }
+
+        void set_coef0(double coef0);
+        double get_coef0() const { return coef0_; }
 
         /**
-         * @brief Convert single sample to libsvm format
-         * @param sample Feature tensor of shape (n_features,)
-         * @return Pointer to svm_node array
+         * @brief Validate all parameters for consistency
+         * @throws std::invalid_argument if parameters are invalid
          */
-        svm_node* to_svm_node(const torch::Tensor& sample);
+        void validate() const;
 
         /**
-         * @brief Convert single sample to liblinear format
-         * @param sample Feature tensor of shape (n_features,)
-         * @return Pointer to feature_node array
+         * @brief Get default parameters for a specific kernel type
+         * @param kernel Kernel type
+         * @return JSON object with default parameters
          */
-        feature_node* to_feature_node(const torch::Tensor& sample);
+        static nlohmann::json get_default_parameters(KernelType kernel);
 
         /**
-         * @brief Convert predictions back to PyTorch tensor
-         * @param predictions Vector of predictions
-         * @return PyTorch tensor with predictions
+         * @brief Reset all parameters to defaults for current kernel type
          */
-        torch::Tensor from_predictions(const std::vector<double>& predictions);
-
-        /**
-         * @brief Convert probabilities back to PyTorch tensor
-         * @param probabilities 2D vector of class probabilities
-         * @return PyTorch tensor with probabilities of shape (n_samples, n_classes)
-         */
-        torch::Tensor from_probabilities(const std::vector<std::vector<double>>& probabilities);
-
-        /**
-         * @brief Convert decision values back to PyTorch tensor
-         * @param decision_values 2D vector of decision function values
-         * @return PyTorch tensor with decision values
-         */
-        torch::Tensor from_decision_values(const std::vector<std::vector<double>>& decision_values);
-
-        /**
-         * @brief Validate input tensors
-         * @param X Feature tensor
-         * @param y Target tensor (optional)
-         * @throws std::invalid_argument if tensors are invalid
-         */
-        void validate_tensors(const torch::Tensor& X, const torch::Tensor& y = torch::Tensor());
-
-        /**
-         * @brief Get number of features from last conversion
-         * @return Number of features
-         */
-        int get_n_features() const { return n_features_; }
-
-        /**
-         * @brief Get number of samples from last conversion
-         * @return Number of samples
-         */
-        int get_n_samples() const { return n_samples_; }
-
-        /**
-         * @brief Clean up all allocated memory
-         */
-        void cleanup();
-
-        /**
-         * @brief Set sparse threshold (features with absolute value below this are ignored)
-         * @param threshold Sparse threshold (default: 1e-8)
-         */
-        void set_sparse_threshold(double threshold) { sparse_threshold_ = threshold; }
-
-        /**
-         * @brief Get sparse threshold
-         * @return Current sparse threshold
-         */
-        double get_sparse_threshold() const { return sparse_threshold_; }
+        void reset_to_defaults();
 
     private:
-        int n_features_;     ///< Number of features
-        int n_samples_;      ///< Number of samples
-        double sparse_threshold_;  ///< Threshold for sparse features
+        KernelType kernel_type_;           ///< Kernel type
+        MulticlassStrategy multiclass_strategy_; ///< Multiclass strategy
+        
+        // Common parameters
+        double C_;                         ///< Regularization parameter
+        double tolerance_;                 ///< Convergence tolerance
+        int max_iterations_;               ///< Maximum iterations (-1 for no limit)
+        bool probability_;                 ///< Enable probability estimates
+        double cache_size_;                ///< Cache size in MB
 
-        // Memory management for libsvm structures
-        std::vector<std::vector<svm_node>> svm_nodes_storage_;
-        std::vector<svm_node*> svm_x_space_;
-        std::vector<double> svm_y_space_;
-
-        // Memory management for liblinear structures
-        std::vector<std::vector<feature_node>> linear_nodes_storage_;
-        std::vector<feature_node*> linear_x_space_;
-        std::vector<double> linear_y_space_;
-
-        // Single sample storage (for prediction)
-        std::vector<svm_node> single_svm_nodes_;
-        std::vector<feature_node> single_linear_nodes_;
+        // Kernel-specific parameters
+        double gamma_;                     ///< Gamma parameter (-1 for auto)
+        int degree_;                       ///< Polynomial degree
+        double coef0_;                     ///< Independent term in polynomial/sigmoid
 
         /**
-         * @brief Convert tensor data to libsvm nodes for multiple samples
-         * @param X Feature tensor
-         * @return Vector of svm_node vectors
+         * @brief Validate kernel-specific parameters
+         * @throws std::invalid_argument if kernel parameters are invalid
          */
-        std::vector<std::vector<svm_node>> tensor_to_svm_nodes(const torch::Tensor& X);
-
-        /**
-         * @brief Convert tensor data to liblinear nodes for multiple samples
-         * @param X Feature tensor
-         * @return Vector of feature_node vectors
-         */
-        std::vector<std::vector<feature_node>> tensor_to_linear_nodes(const torch::Tensor& X);
-
-        /**
-         * @brief Convert single tensor sample to svm_node vector
-         * @param sample Feature tensor of shape (n_features,)
-         * @return Vector of svm_node structures
-         */
-        std::vector<svm_node> sample_to_svm_nodes(const torch::Tensor& sample);
-
-        /**
-         * @brief Convert single tensor sample to feature_node vector
-         * @param sample Feature tensor of shape (n_features,)
-         * @return Vector of feature_node structures
-         */
-        std::vector<feature_node> sample_to_linear_nodes(const torch::Tensor& sample);
-
-        /**
-         * @brief Extract labels from target tensor
-         * @param y Target tensor
-         * @return Vector of double labels
-         */
-        std::vector<double> extract_labels(const torch::Tensor& y);
-
-        /**
-         * @brief Check if tensor is on CPU and convert if necessary
-         * @param tensor Input tensor
-         * @return Tensor guaranteed to be on CPU
-         */
-        torch::Tensor ensure_cpu_tensor(const torch::Tensor& tensor);
-
-        /**
-         * @brief Validate tensor dimensions and data type
-         * @param tensor Tensor to validate
-         * @param expected_dims Expected number of dimensions
-         * @param name Tensor name for error messages
-         */
-        void validate_tensor_properties(const torch::Tensor& tensor, int expected_dims, const std::string& name);
+        void validate_kernel_parameters() const;
     };
 
 } // namespace svm_classifier

@@ -134,17 +134,29 @@ namespace svm_classifier {
                 break;
 
             case KernelType::RBF:
-                params["gamma"] = is_gamma_auto() ? "auto" : gamma_;
+                if (is_gamma_auto()) {
+                    params["gamma"] = "auto";
+                } else {
+                    params["gamma"] = gamma_;
+                }
                 break;
 
             case KernelType::POLYNOMIAL:
                 params["degree"] = degree_;
-                params["gamma"] = is_gamma_auto() ? "auto" : gamma_;
+                if (is_gamma_auto()) {
+                    params["gamma"] = "auto";
+                } else {
+                    params["gamma"] = gamma_;
+                }
                 params["coef0"] = coef0_;
                 break;
 
             case KernelType::SIGMOID:
-                params["gamma"] = is_gamma_auto() ? "auto" : gamma_;
+                if (is_gamma_auto()) {
+                    params["gamma"] = "auto";
+                } else {
+                    params["gamma"] = gamma_;
+                }
                 params["coef0"] = coef0_;
                 break;
         }

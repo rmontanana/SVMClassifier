@@ -8,7 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
-// Forward declarations
+// Forward declarations for external library structures
 struct svm_model;
 struct model;
 

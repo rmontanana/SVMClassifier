@@ -7,6 +7,10 @@
 #include <svm_classifier/data_converter.hpp>
 #include <torch/torch.h>
 
+// Include the actual headers for complete struct definitions
+#include "svm.h"        // libsvm structures
+#include "linear.h"     // liblinear structures
+
 using namespace svm_classifier;
 
 TEST_CASE("DataConverter Basic Functionality", "[unit][data_converter]")

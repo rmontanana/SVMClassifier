@@ -10,7 +10,13 @@
 #include <iostream>
 #include <iomanip>
 
+// Include the actual headers for complete struct definitions
+#include "svm.h"        // libsvm structures
+#include "linear.h"     // liblinear structures
+#include <nlohmann/json.hpp>
+
 using namespace svm_classifier;
+using json = nlohmann::json;
 
 /**
  * @brief Generate large synthetic dataset for performance testing

@@ -23,15 +23,30 @@ target_link_libraries(svm_classifier_tests
     PRIVATE 
         svm_classifier
         Catch2::Catch2WithMain
+        nlohmann_json::nlohmann_json
 )
 
-# Set include directories
+# Set include directories - Handle external libraries dynamically
 target_include_directories(svm_classifier_tests
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/external/libsvm
-        ${CMAKE_SOURCE_DIR}/external/liblinear
 )
+
+# Add libsvm include directory if available
+if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../_deps/libsvm-src")
+    target_include_directories(svm_classifier_tests 
+        PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../_deps/libsvm-src"
+    )
+endif()
+
+# Add liblinear include directories if available
+if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../_deps/liblinear-src")
+    target_include_directories(svm_classifier_tests 
+        PRIVATE 
+            "${CMAKE_CURRENT_BINARY_DIR}/../_deps/liblinear-src"
+            "${CMAKE_CURRENT_BINARY_DIR}/../_deps/liblinear-src/blas"
+    )
+endif()
 
 # Compiler flags for tests
 target_compile_features(svm_classifier_tests PRIVATE cxx_std_17)

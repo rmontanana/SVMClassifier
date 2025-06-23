@@ -196,7 +196,7 @@ namespace svm_classifier {
          * @brief Get SVM library being used
          * @return SVM library type
          */
-        SVMLibrary get_svm_library() const { return get_svm_library(params_.get_kernel_type()); }
+        SVMLibrary get_svm_library() const { return ::svm_classifier::get_svm_library(params_.get_kernel_type()); }
 
         /**
          * @brief Perform cross-validation
