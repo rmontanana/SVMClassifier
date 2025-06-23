@@ -64,19 +64,25 @@ elseif(EXISTS "${liblinear_SOURCE_DIR}/newton.cpp")
     list(APPEND LIBLINEAR_SOURCES "${liblinear_SOURCE_DIR}/newton.cpp")
 endif()
 
-# Check for BLAS files in blas directory
-file(GLOB BLAS_C_FILES "${liblinear_SOURCE_DIR}/blas/*.c")
-file(GLOB BLAS_CPP_FILES "${liblinear_SOURCE_DIR}/blas/*.cpp")
-
-if(BLAS_C_FILES OR BLAS_CPP_FILES)
-    list(APPEND LIBLINEAR_SOURCES ${BLAS_C_FILES} ${BLAS_CPP_FILES})
-else()
-    # Try alternative BLAS file names
-    foreach(blas_file daxpy ddot dnrm2 dscal)
-        if(EXISTS "${liblinear_SOURCE_DIR}/blas/${blas_file}.c")
-            list(APPEND LIBLINEAR_SOURCES "${liblinear_SOURCE_DIR}/blas/${blas_file}.c")
+# Check for BLAS files in blas directory - Fixed to ensure they're included
+if(EXISTS "${liblinear_SOURCE_DIR}/blas")
+    # Explicitly add the required BLAS source files
+    set(BLAS_FILES
+        "${liblinear_SOURCE_DIR}/blas/daxpy.c"
+        "${liblinear_SOURCE_DIR}/blas/ddot.c"
+        "${liblinear_SOURCE_DIR}/blas/dnrm2.c"
+        "${liblinear_SOURCE_DIR}/blas/dscal.c"
+    )
+    
+    # Check which BLAS files actually exist and add them
+    foreach(blas_file ${BLAS_FILES})
+        if(EXISTS ${blas_file})
+            list(APPEND LIBLINEAR_SOURCES ${blas_file})
+            message(STATUS "Adding BLAS file: ${blas_file}")
         endif()
     endforeach()
+else()
+    message(WARNING "BLAS directory not found in liblinear source")
 endif()
 
 # Create liblinear object library if we have source files
