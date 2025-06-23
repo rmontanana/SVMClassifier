@@ -1,39 +1,42 @@
-# SVMClassifierConfig.cmake.in
-# CMake configuration file for SVMClassifier package
-
 @PACKAGE_INIT@
 
-# Set the version
-set(SVMClassifier_VERSION @PACKAGE_VERSION@)
+# SVMClassifier package configuration file
 
-# Find required dependencies
+# Check if components are specified
+set(_supported_components )
+
+# Handle components
+foreach(_comp ${SVMClassifier_FIND_COMPONENTS})
+    if(NOT _comp IN_LIST _supported_components)
+        set(SVMClassifier_FOUND FALSE)
+        set(SVMClassifier_NOT_FOUND_MESSAGE "Unsupported component: ${_comp}")
+    endif()
+endforeach()
+
+# Include dependencies that are required for using SVMClassifier
+include(CMakeFindDependencyMacro)
+
+# Find Torch dependency
 find_dependency(Torch REQUIRED)
-find_dependency(PkgConfig REQUIRED)
 
-# Include nlohmann_json
-if(NOT TARGET nlohmann_json::nlohmann_json)
-    find_package(nlohmann_json 3.11.0 REQUIRED)
-endif()
+# Note: nlohmann_json, libsvm, and liblinear are linked privately
+# so they don't need to be found here
 
 # Include the targets file
 include("${CMAKE_CURRENT_LIST_DIR}/SVMClassifierTargets.cmake")
 
-# Set variables for backward compatibility
+# Set variables for compatibility
 set(SVMClassifier_LIBRARIES SVMClassifier::svm_classifier)
-set(SVMClassifier_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+set(SVMClassifier_INCLUDE_DIRS)
 
-# Verify that the targets were imported
-if(NOT TARGET SVMClassifier::svm_classifier)
-    message(FATAL_ERROR "SVMClassifier::svm_classifier target not found")
+# Get the include directories from the target
+get_target_property(_inc_dirs SVMClassifier::svm_classifier INTERFACE_INCLUDE_DIRECTORIES)
+if(_inc_dirs)
+    set(SVMClassifier_INCLUDE_DIRS ${_inc_dirs})
 endif()
+
+# Check that all required components have been found
+check_required_components(SVMClassifier)
 
 # Set found flag
 set(SVMClassifier_FOUND TRUE)
-
-# Print status message
-if(NOT SVMClassifier_FIND_QUIETLY)
-    message(STATUS "Found SVMClassifier: ${PACKAGE_PREFIX_DIR} (found version \"${SVMClassifier_VERSION}\")")
-endif()
-
-# Check version compatibility
-check_required_components(SVMClassifier)

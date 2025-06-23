@@ -6,6 +6,7 @@ project(SVMClassifier
     HOMEPAGE_URL "https://gitea.rmontanana.es/rmontanana/SVMClassifier"
 )
 set(PROJECT_AUTHOR "Ricardo Montañana Gómez")
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,6 +33,7 @@ endif()
 include(FetchContent)
 
 # Fetch nlohmann/json
+set(JSON_Install ON CACHE BOOL "Install nlohmann-json when my project is installed" FORCE)
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
@@ -52,8 +54,6 @@ add_subdirectory(external)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/external/libsvm)
-include_directories(${CMAKE_SOURCE_DIR}/external/liblinear)
 
 # Create the main library
 set(SOURCES
@@ -74,14 +74,14 @@ set(HEADERS
 # Create library
 add_library(svm_classifier STATIC ${SOURCES} ${HEADERS})
 
-# Link libraries with PRIVATE linkage to avoid export issues
+# Link libraries - Updated to use object libraries instead of static libraries
 target_link_libraries(svm_classifier 
     PUBLIC 
         ${TORCH_LIBRARIES}
     PRIVATE
         nlohmann_json::nlohmann_json
-        libsvm_static
-        liblinear_static
+        $<TARGET_OBJECTS:libsvm_objects>
+        $<TARGET_OBJECTS:liblinear_objects>
 )
 
 # Set include directories
@@ -90,9 +90,27 @@ target_include_directories(svm_classifier
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/libsvm
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/liblinear
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+# Add include directories from external libraries using variables set by external/CMakeLists.txt
+if(LIBSVM_INCLUDE_DIR)
+    target_include_directories(svm_classifier 
+        PRIVATE ${LIBSVM_INCLUDE_DIR}
+    )
+endif()
+
+if(LIBLINEAR_INCLUDE_DIR)
+    target_include_directories(svm_classifier 
+        PRIVATE ${LIBLINEAR_INCLUDE_DIR}
+    )
+endif()
+
+if(LIBLINEAR_BLAS_INCLUDE_DIR)
+    target_include_directories(svm_classifier 
+        PRIVATE ${LIBLINEAR_BLAS_INCLUDE_DIR}
+    )
+endif()
 
 # Compiler-specific options
 target_compile_features(svm_classifier PUBLIC cxx_std_17)

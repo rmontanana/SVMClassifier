@@ -1,3 +1,5 @@
+# External dependencies CMakeLists.txt - Fixed version with OBJECT libraries
+
 include(FetchContent)
 
 # Set policies for FetchContent
@@ -21,23 +23,33 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(liblinear)
 
-# Build libsvm as static library
+# Build libsvm as OBJECT library to avoid export issues
 if(EXISTS "${libsvm_SOURCE_DIR}/svm.cpp")
     set(LIBSVM_SOURCES "${libsvm_SOURCE_DIR}/svm.cpp")
     
-    add_library(libsvm_static STATIC ${LIBSVM_SOURCES})
-    target_include_directories(libsvm_static PUBLIC ${libsvm_SOURCE_DIR})
+    add_library(libsvm_objects OBJECT ${LIBSVM_SOURCES})
+    
+    # Set properties for the object library
+    target_include_directories(libsvm_objects 
+        PRIVATE 
+            ${libsvm_SOURCE_DIR}
+    )
     
     # Set C++ standard for libsvm
-    target_compile_features(libsvm_static PUBLIC cxx_std_17)
+    target_compile_features(libsvm_objects PRIVATE cxx_std_17)
     
-    message(STATUS "libsvm built successfully")
+    # Make the include directory available to parent scope
+    set(LIBSVM_INCLUDE_DIR ${libsvm_SOURCE_DIR} PARENT_SCOPE)
+    
+    message(STATUS "libsvm built successfully as object library")
 else()
-    message(WARNING "libsvm source files not found, creating dummy target")
-    add_library(libsvm_static INTERFACE)
+    message(WARNING "libsvm source files not found")
+    # Create empty object library
+    add_library(libsvm_objects OBJECT)
+    set(LIBSVM_INCLUDE_DIR "" PARENT_SCOPE)
 endif()
 
-# Build liblinear as static library
+# Build liblinear as OBJECT library
 set(LIBLINEAR_SOURCES)
 
 # Check for main liblinear source files
@@ -67,33 +79,40 @@ else()
     endforeach()
 endif()
 
-# Create liblinear library if we have source files
+# Create liblinear object library if we have source files
 if(LIBLINEAR_SOURCES)
-    add_library(liblinear_static STATIC ${LIBLINEAR_SOURCES})
+    add_library(liblinear_objects OBJECT ${LIBLINEAR_SOURCES})
     
-    target_include_directories(liblinear_static 
-        PUBLIC 
+    # Set properties for the object library
+    target_include_directories(liblinear_objects 
+        PRIVATE 
             ${liblinear_SOURCE_DIR}
     )
     
     # Add blas directory if it exists
     if(EXISTS "${liblinear_SOURCE_DIR}/blas")
-        target_include_directories(liblinear_static 
-            PUBLIC ${liblinear_SOURCE_DIR}/blas
+        target_include_directories(liblinear_objects 
+            PRIVATE ${liblinear_SOURCE_DIR}/blas
         )
     endif()
     
     # Set C++ standard for liblinear
-    target_compile_features(liblinear_static PUBLIC cxx_std_17)
+    target_compile_features(liblinear_objects PRIVATE cxx_std_17)
     
     # Compiler specific flags
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(liblinear_static PRIVATE -w) # Suppress warnings
+        target_compile_options(liblinear_objects PRIVATE -w) # Suppress warnings
+    endif()
+    
+    # Make the include directories available to parent scope
+    set(LIBLINEAR_INCLUDE_DIR ${liblinear_SOURCE_DIR} PARENT_SCOPE)
+    if(EXISTS "${liblinear_SOURCE_DIR}/blas")
+        set(LIBLINEAR_BLAS_INCLUDE_DIR ${liblinear_SOURCE_DIR}/blas PARENT_SCOPE)
     endif()
     
     message(STATUS "liblinear built with sources: ${LIBLINEAR_SOURCES}")
 else()
-    # Create minimal liblinear implementation
+    # Create minimal liblinear implementation as object library
     message(WARNING "liblinear source files not found, creating minimal implementation")
     
     # Create a minimal linear.cpp file
@@ -139,12 +158,15 @@ else()
         "}\n"
     )
     
-    add_library(liblinear_static STATIC "${MINIMAL_LIBLINEAR_DIR}/linear.cpp")
-    target_include_directories(liblinear_static PUBLIC ${MINIMAL_LIBLINEAR_DIR})
-    target_compile_features(liblinear_static PUBLIC cxx_std_17)
+    add_library(liblinear_objects OBJECT "${MINIMAL_LIBLINEAR_DIR}/linear.cpp")
+    target_include_directories(liblinear_objects PRIVATE ${MINIMAL_LIBLINEAR_DIR})
+    target_compile_features(liblinear_objects PRIVATE cxx_std_17)
+    
+    set(LIBLINEAR_INCLUDE_DIR ${MINIMAL_LIBLINEAR_DIR} PARENT_SCOPE)
 endif()
 
 # Print summary
 message(STATUS "External libraries configured:")
 message(STATUS "  - libsvm: ${libsvm_SOURCE_DIR}")  
 message(STATUS "  - liblinear: ${liblinear_SOURCE_DIR}")
+message(STATUS "  - Using OBJECT libraries to avoid export issues")
