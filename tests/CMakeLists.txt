@@ -24,7 +24,7 @@ target_link_libraries(svm_classifier_tests
         svm_classifier
         Catch2::Catch2WithMain
         nlohmann_json::nlohmann_json
-        $<$<TARGET_EXISTS:blas_functions>:blas_functions>
+        # No need to link external libraries as they're already in svm_classifier
 )
 
 # Set include directories - Handle external libraries dynamically
