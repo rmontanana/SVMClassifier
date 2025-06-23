@@ -3,7 +3,8 @@
  * @brief Unit tests for DataConverter class
  */
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <svm_classifier/data_converter.hpp>
 #include <torch/torch.h>
 

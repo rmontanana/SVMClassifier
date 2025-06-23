@@ -73,7 +73,7 @@ void basic_svm_example()
     std::cout << "Dataset created:" << std::endl;
     print_tensor_stats(X_train, "X_train");
     std::cout << "Unique classes in y_train: ";
-    auto unique_classes = torch::unique(y_train);
+    auto unique_classes = std::get<0>(at::_unique(y_train));
     for (int i = 0; i < unique_classes.size(0); ++i) {
         std::cout << unique_classes[i].item<int>() << " ";
     }

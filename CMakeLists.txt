@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(SVMClassifier 
     VERSION 1.0.0 
-    LANGUAGES CXX
+    LANGUAGES C CXX
     DESCRIPTION "A C++ library for Support Vector Machine classification using PyTorch"
     HOMEPAGE_URL "https://gitea.rmontanana.es/rmontanana/SVMClassifier"
 )
@@ -74,14 +74,22 @@ set(HEADERS
 # Create library
 add_library(svm_classifier STATIC ${SOURCES} ${HEADERS})
 
-# Link libraries - Updated to use object libraries instead of static libraries
+# Link libraries - Updated to use object libraries and BLAS if available
+# target_link_libraries(svm_classifier 
+#     PUBLIC 
+#         ${TORCH_LIBRARIES}
+#     PRIVATE
+#         nlohmann_json::nlohmann_json
+#         $<TARGET_OBJECTS:libsvm_objects>
+#         $<TARGET_OBJECTS:liblinear_objects>
+#         $<$<TARGET_EXISTS:blas_functions>:blas_functions>
+# )
 target_link_libraries(svm_classifier 
     PUBLIC 
         ${TORCH_LIBRARIES}
     PRIVATE
         nlohmann_json::nlohmann_json
-        $<TARGET_OBJECTS:libsvm_objects>
-        $<TARGET_OBJECTS:liblinear_objects>
+        $<$<TARGET_EXISTS:svm_external_combined>:svm_external_combined>
 )
 
 # Set include directories

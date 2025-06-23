@@ -24,6 +24,7 @@ target_link_libraries(svm_classifier_tests
         svm_classifier
         Catch2::Catch2WithMain
         nlohmann_json::nlohmann_json
+        $<$<TARGET_EXISTS:blas_functions>:blas_functions>
 )
 
 # Set include directories - Handle external libraries dynamically
@@ -31,6 +32,20 @@ target_include_directories(svm_classifier_tests
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include
 )
+
+# Add Catch2 include directories explicitly
+if(TARGET Catch2::Catch2)
+    get_target_property(CATCH2_INCLUDE_DIRS Catch2::Catch2 INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(svm_classifier_tests PRIVATE ${CATCH2_INCLUDE_DIRS})
+endif()
+
+# Also add the source directory of Catch2 if available
+if(catch2_SOURCE_DIR)
+    target_include_directories(svm_classifier_tests
+        PRIVATE
+            ${catch2_SOURCE_DIR}/src
+    )
+endif()
 
 # Add libsvm include directory if available
 if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../_deps/libsvm-src")
