@@ -1,0 +1,17 @@
+---
+Checks: '-*,
+         clang-*,
+         bugprone-*,
+         cppcoreguidelines-*,
+         modernize-*,
+         performance-*,
+         -modernize-use-nodiscard,
+         -cppcoreguidelines-pro-type-vararg,
+         -modernize-use-trailing-return-type,
+         -bugprone-exception-escape'
+
+HeaderFilterRegex: 'src/*'
+AnalyzeTemporaryDtors: false
+WarningsAsErrors: ''
+FormatStyle: file
+...

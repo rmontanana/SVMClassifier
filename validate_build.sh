@@ -22,7 +22,7 @@ VERBOSE=false
 CLEAN_BUILD=true
 RUN_PERFORMANCE_TESTS=false
 RUN_MEMORY_CHECKS=false
-TORCH_VERSION="2.1.0"
+TORCH_VERSION="2.7.1"
 
 # Counters for test results
 TESTS_PASSED=0
@@ -518,10 +518,16 @@ validate_documentation() {
     
     print_header "VALIDATING DOCUMENTATION"
     
-    print_step "Generating documentation"
-    if doxygen Doxyfile >/dev/null 2>doxygen_warnings.log; then
+    cd "$BUILD_DIR"
+    
+    print_step "Generating documentation with CMake target"
+    if cmake --build . --target doxygen >/dev/null 2>doxygen_warnings.log; then
         if [ -f "docs/html/index.html" ]; then
             print_success "Documentation generated successfully"
+            
+            # Check documentation size (should be substantial)
+            DOC_SIZE=$(du -sh docs/html 2>/dev/null | cut -f1)
+            print_info "Documentation size: $DOC_SIZE"
         else
             print_failure "Documentation files not found"
         fi
@@ -530,13 +536,43 @@ validate_documentation() {
         if [ -s doxygen_warnings.log ]; then
             WARNING_COUNT=$(wc -l < doxygen_warnings.log)
             print_warning "Documentation has $WARNING_COUNT warnings"
+            if [ "$VERBOSE" = true ]; then
+                print_info "Sample warnings:"
+                head -5 doxygen_warnings.log | while read -r line; do
+                    print_info "  $line"
+                done
+            fi
         else
             print_success "Documentation generated without warnings"
         fi
+        
+        # Check for essential documentation files
+        DOC_FILES=(
+            "docs/html/index.html"
+            "docs/html/annotated.html"
+            "docs/html/classes.html"
+            "docs/html/files.html"
+        )
+        
+        for doc_file in "${DOC_FILES[@]}"; do
+            if [ -f "$doc_file" ]; then
+                print_success "Found: $(basename "$doc_file")"
+            else
+                print_warning "Missing: $(basename "$doc_file")"
+            fi
+        done
+        
     else
         print_failure "Documentation generation failed"
+        if [ -s doxygen_warnings.log ]; then
+            print_info "Error log:"
+            head -10 doxygen_warnings.log | while read -r line; do
+                print_info "  $line"
+            done
+        fi
     fi
     
+    cd ..
     rm -f doxygen_warnings.log
 }
 
@@ -550,7 +586,7 @@ test_packaging() {
         print_success "Package generation successful"
         
         # List generated packages
-        for pkg in *.tar.gz *.deb *.rpm *.zip 2>/dev/null; do
+        for pkg in *.tar.gz *.deb *.rpm *.zip ; do
             if [ -f "$pkg" ]; then
                 print_info "Generated package: $pkg"
             fi

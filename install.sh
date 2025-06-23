@@ -50,7 +50,7 @@ OPTIONS:
     -b, --build-type TYPE   Build type: Release, Debug, RelWithDebInfo (default: Release)
     -p, --prefix PATH       Installation prefix (default: /usr/local)
     -j, --jobs NUM          Number of parallel jobs (default: $(nproc))
-    -t, --torch-version VER PyTorch version to download (default: 2.7.1)
+    -t, --torch-version VER PyTorch version to download (default: 2.1.0)
     --skip-tests            Skip running tests after build
     --clean                 Clean build directory before building
     -v, --verbose           Enable verbose output
@@ -125,6 +125,17 @@ print_status "Install prefix: $INSTALL_PREFIX"
 print_status "Parallel jobs: $NUM_JOBS"
 print_status "PyTorch version: $TORCH_VERSION"
 
+# Make other scripts executable
+if [ -f "validate_build.sh" ]; then
+    chmod +x validate_build.sh
+fi
+if [ -f "build_docs.sh" ]; then
+    chmod +x build_docs.sh
+fi
+if [ -f "troubleshoot_cmake.sh" ]; then
+    chmod +x troubleshoot_cmake.sh
+fi
+
 # Check if we're in the right directory
 if [ ! -f "CMakeLists.txt" ] || [ ! -d "src" ] || [ ! -d "include" ]; then
     print_error "Please run this script from the SVMClassifier root directory"
@@ -197,22 +208,56 @@ if [ ! -d "$TORCH_DIR" ] && [ ! -d "$(pwd)/libtorch" ]; then
     print_status "Downloading PyTorch C++ (libtorch) version $TORCH_VERSION..."
     
     # Determine download URL based on PyTorch version
-    TORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
-    print_status "Downloading Torch Using URL: $TORCH_URL"
+    # Handle different version formats (2.1.0, 2.7.1, etc.)
+    if [[ "$TORCH_VERSION" =~ ^2\.[0-6]\. ]]; then
+        # Older format for versions 2.0-2.6
+        TORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
+    else
+        # Newer format for versions 2.7+
+        TORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
+    fi
+    
+    print_info "Download URL: $TORCH_URL"
+    
     # Try to install system-wide first, fallback to local
     if [ -w "/opt" ]; then
         cd /opt
-        sudo curl -s "$TORCH_URL" --output libtorch.zip
-        sudo unzip -q libtorch.zip
-        sudo rm libtorch.zip
-        TORCH_DIR="/opt/libtorch"
+        if sudo wget -q "$TORCH_URL" -O libtorch.zip; then
+            sudo unzip -q libtorch.zip
+            sudo rm libtorch.zip
+            TORCH_DIR="/opt/libtorch"
+        else
+            print_warning "Failed to download from official URL, trying alternative..."
+            cd "$(dirname "$0")"
+            # Fallback: check if user already has libtorch locally
+            if [ -d "libtorch" ]; then
+                print_success "Using existing local libtorch directory"
+                TORCH_DIR="$(pwd)/libtorch"
+            else
+                print_error "Could not download PyTorch. Please install manually:"
+                print_info "1. Download libtorch from https://pytorch.org/get-started/locally/"
+                print_info "2. Extract to /opt/libtorch or $(pwd)/libtorch"
+                print_info "3. Re-run this script"
+                exit 1
+            fi
+        fi
     else
-        print_warning "Cannot write to /opt, installing libtorch locally..."
-        cd "$(pwd)"
-        curl -s "$TORCH_URL" --output libtorch.zip
-        unzip -q libtorch.zip
-        rm libtorch.zip
-        TORCH_DIR="$(pwd)/libtorch"
+        print_warning "Cannot write to /opt, checking for local libtorch..."
+        cd "$(dirname "$0")"
+        if [ -d "libtorch" ]; then
+            print_success "Using existing local libtorch directory"
+            TORCH_DIR="$(pwd)/libtorch"
+        else
+            print_info "Downloading libtorch locally..."
+            if wget -q "$TORCH_URL" -O libtorch.zip; then
+                unzip -q libtorch.zip
+                rm libtorch.zip
+                TORCH_DIR="$(pwd)/libtorch"
+            else
+                print_error "Could not download PyTorch. Please install manually."
+                exit 1
+            fi
+        fi
     fi
     
     print_success "PyTorch C++ installed to $TORCH_DIR"
@@ -313,6 +358,10 @@ echo "Usage:"
 echo "  - Include path: $INSTALL_PREFIX/include"
 echo "  - Library: -lsvm_classifier"
 echo "  - CMake: find_package(SVMClassifier REQUIRED)"
+echo
+echo "Documentation:"
+echo "  - Build docs: cmake --build build --target doxygen"
+echo "  - Or use: ./build_docs.sh --open"
 echo
 echo "Environment:"
 echo "  export LD_LIBRARY_PATH=$TORCH_DIR/lib:\$LD_LIBRARY_PATH"

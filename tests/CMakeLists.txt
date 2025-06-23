@@ -1,7 +1,7 @@
 # Tests CMakeLists.txt
 
 # Find Catch2 (should already be available from main CMakeLists.txt)
-find_package(Catch2 3 REQUIRED)
+# find_package(Catch2 3 REQUIRED)
 
 # Include Catch2 extras for automatic test discovery
 include(Catch)
@@ -17,7 +17,7 @@ set(TEST_SOURCES
 
 # Create test executable
 add_executable(svm_classifier_tests ${TEST_SOURCES})
-
+add_test(NAME svm_classifier_tests COMMAND svm_classifier_tests)
 # Link with the main library and Catch2
 target_link_libraries(svm_classifier_tests 
     PRIVATE 
