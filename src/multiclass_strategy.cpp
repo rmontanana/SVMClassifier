@@ -50,6 +50,13 @@ namespace svm_classifier {
             // For binary classification, train a single classifier
             classes_.resize(2); // Ensure we have exactly 2 classes
 
+            // Resize model vectors for binary classification
+            if (library_type_ == SVMLibrary::LIBSVM) {
+                svm_models_.resize(1);
+            } else {
+                linear_models_.resize(1);
+            }
+
             auto binary_y = y;
             if (classes_.size() == 1) {
                 // Edge case: only one class, create dummy binary problem
@@ -130,7 +137,7 @@ namespace svm_classifier {
             sample_probs.reserve(classes_.size());
 
             if (library_type_ == SVMLibrary::LIBSVM) {
-                for (size_t j = 0; j < classes_.size(); ++j) {
+                for (size_t j = 0; j < svm_models_.size(); ++j) {
                     if (svm_models_[j]) {
                         auto sample_node = converter.to_svm_node(sample);
                         double prob_estimates[2];
@@ -140,8 +147,12 @@ namespace svm_classifier {
                         sample_probs.push_back(0.0);
                     }
                 }
+                // For binary classification with single model, add complement probability
+                if (classes_.size() == 2 && svm_models_.size() == 1 && !sample_probs.empty()) {
+                    sample_probs.push_back(1.0 - sample_probs[0]);
+                }
             } else {
-                for (size_t j = 0; j < classes_.size(); ++j) {
+                for (size_t j = 0; j < linear_models_.size(); ++j) {
                     if (linear_models_[j]) {
                         auto sample_node = converter.to_feature_node(sample);
                         double prob_estimates[2];
@@ -150,6 +161,10 @@ namespace svm_classifier {
                     } else {
                         sample_probs.push_back(0.0);
                     }
+                }
+                // For binary classification with single model, add complement probability
+                if (classes_.size() == 2 && linear_models_.size() == 1 && !sample_probs.empty()) {
+                    sample_probs.push_back(1.0 - sample_probs[0]);
                 }
             }
 
@@ -186,7 +201,7 @@ namespace svm_classifier {
             sample_decisions.reserve(classes_.size());
 
             if (library_type_ == SVMLibrary::LIBSVM) {
-                for (size_t j = 0; j < classes_.size(); ++j) {
+                for (size_t j = 0; j < svm_models_.size(); ++j) {
                     if (svm_models_[j]) {
                         auto sample_node = converter.to_svm_node(sample);
                         double decision_value;
@@ -196,8 +211,12 @@ namespace svm_classifier {
                         sample_decisions.push_back(0.0);
                     }
                 }
+                // For binary classification with single model, add negative decision value
+                if (classes_.size() == 2 && svm_models_.size() == 1 && !sample_decisions.empty()) {
+                    sample_decisions.push_back(-sample_decisions[0]);
+                }
             } else {
-                for (size_t j = 0; j < classes_.size(); ++j) {
+                for (size_t j = 0; j < linear_models_.size(); ++j) {
                     if (linear_models_[j]) {
                         auto sample_node = converter.to_feature_node(sample);
                         double decision_value;
@@ -206,6 +225,10 @@ namespace svm_classifier {
                     } else {
                         sample_decisions.push_back(0.0);
                     }
+                }
+                // For binary classification with single model, add negative decision value
+                if (classes_.size() == 2 && linear_models_.size() == 1 && !sample_decisions.empty()) {
+                    sample_decisions.push_back(-sample_decisions[0]);
                 }
             }
 
