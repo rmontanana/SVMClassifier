@@ -321,7 +321,8 @@ namespace svm_classifier {
             linear_params.p = 0.1;
             linear_params.nu = 0.5;
             linear_params.init_sol = nullptr;
-            linear_params.regularize_bias = 0;
+            linear_params.regularize_bias = 1;
+            linear_params.w_recalc = false;
 
             // Check parameters
             const char* error_msg = check_parameter(problem.get(), &linear_params);
@@ -628,7 +629,8 @@ namespace svm_classifier {
             linear_params.p = 0.1;
             linear_params.nu = 0.5;
             linear_params.init_sol = nullptr;
-            linear_params.regularize_bias = 0;
+            linear_params.regularize_bias = 1;
+            linear_params.w_recalc = false;
 
             // Check parameters
             const char* error_msg = check_parameter(problem.get(), &linear_params);

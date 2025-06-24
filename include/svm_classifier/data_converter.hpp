@@ -138,6 +138,7 @@ namespace svm_classifier {
         std::vector<double> linear_y_space_;
 
         // Single sample storage (for prediction)
+        // Thread-local storage for single sample conversions
         std::vector<svm_node> single_svm_nodes_;
         std::vector<feature_node> single_linear_nodes_;
 
