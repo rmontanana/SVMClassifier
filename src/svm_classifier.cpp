@@ -8,6 +8,52 @@
 
 namespace svm_classifier {
 
+    namespace {
+        // Helper function to convert tensor to vector
+        std::vector<int> tensor_to_vector(const torch::Tensor& tensor) {
+            auto tensor_cpu = tensor.to(torch::kCPU);
+            std::vector<int> result;
+            result.reserve(tensor_cpu.size(0));
+            for (int i = 0; i < tensor_cpu.size(0); ++i) {
+                result.push_back(tensor_cpu[i].item<int>());
+            }
+            return result;
+        }
+
+        // Helper function to calculate class metrics from confusion matrix for a single class
+        std::tuple<double, double, double> calculate_class_metrics(
+            const std::vector<std::vector<int>>& confusion_matrix, int class_idx)
+        {
+            int n_classes = confusion_matrix.size();
+            int tp = confusion_matrix[class_idx][class_idx];
+            int fp = 0, fn = 0;
+
+            for (int j = 0; j < n_classes; ++j) {
+                if (class_idx != j) {
+                    fp += confusion_matrix[j][class_idx]; // False positives
+                    fn += confusion_matrix[class_idx][j]; // False negatives
+                }
+            }
+
+            double precision = (tp + fp > 0) ? static_cast<double>(tp) / (tp + fp) : 0.0;
+            double recall = (tp + fn > 0) ? static_cast<double>(tp) / (tp + fn) : 0.0;
+            double f1 = (precision + recall > 0) ? 2.0 * precision * recall / (precision + recall) : 0.0;
+
+            return { precision, recall, f1 };
+        }
+
+        // Helper function to calculate fold boundaries for cross-validation
+        std::pair<int, int> calculate_fold_boundaries(int n_samples, int fold, int n_folds) {
+            int fold_size = n_samples / n_folds;
+            int remainder = n_samples % n_folds;
+
+            int val_start = fold * fold_size + std::min(fold, remainder);
+            int val_end = val_start + fold_size + (fold < remainder ? 1 : 0);
+
+            return { val_start, val_end };
+        }
+    } // anonymous namespace
+
     SVMClassifier::SVMClassifier()
         : is_fitted_(false)
         , n_features_(0)
@@ -130,16 +176,10 @@ namespace svm_classifier {
         validate_input(X, y_true, true);
 
         auto predictions = predict(X);
-        auto y_true_cpu = y_true.to(torch::kCPU);
-        auto predictions_cpu = predictions.to(torch::kCPU);
 
         // Convert to std::vector for easier processing
-        std::vector<int> y_true_vec, y_pred_vec;
-
-        for (int i = 0; i < y_true_cpu.size(0); ++i) {
-            y_true_vec.push_back(y_true_cpu[i].item<int>());
-            y_pred_vec.push_back(predictions_cpu[i].item<int>());
-        }
+        auto y_true_vec = tensor_to_vector(y_true);
+        auto y_pred_vec = tensor_to_vector(predictions);
 
         EvaluationMetrics metrics;
 
@@ -421,7 +461,6 @@ namespace svm_classifier {
     std::tuple<double, double, double> SVMClassifier::calculate_metrics_from_confusion_matrix(
         const std::vector<std::vector<int>>& confusion_matrix)
     {
-
         int n_classes = confusion_matrix.size();
         if (n_classes == 0) {
             return { 0.0, 0.0, 0.0 };
@@ -430,22 +469,10 @@ namespace svm_classifier {
         std::vector<double> precision(n_classes), recall(n_classes), f1(n_classes);
 
         for (int i = 0; i < n_classes; ++i) {
-            int tp = confusion_matrix[i][i];
-            int fp = 0, fn = 0;
-
-            // Calculate false positives and false negatives
-            for (int j = 0; j < n_classes; ++j) {
-                if (i != j) {
-                    fp += confusion_matrix[j][i]; // False positives
-                    fn += confusion_matrix[i][j]; // False negatives
-                }
-            }
-
-            // Calculate precision, recall, and F1-score for this class
-            precision[i] = (tp + fp > 0) ? static_cast<double>(tp) / (tp + fp) : 0.0;
-            recall[i] = (tp + fn > 0) ? static_cast<double>(tp) / (tp + fn) : 0.0;
-            f1[i] = (precision[i] + recall[i] > 0) ?
-                2.0 * precision[i] * recall[i] / (precision[i] + recall[i]) : 0.0;
+            auto [p, r, f] = calculate_class_metrics(confusion_matrix, i);
+            precision[i] = p;
+            recall[i] = r;
+            f1[i] = f;
         }
 
         // Calculate macro averages
@@ -460,12 +487,7 @@ namespace svm_classifier {
         SVMClassifier::split_for_cv(const torch::Tensor& X, const torch::Tensor& y, int fold, int n_folds)
     {
         int n_samples = X.size(0);
-        int fold_size = n_samples / n_folds;
-        int remainder = n_samples % n_folds;
-
-        // Calculate start and end indices for validation fold
-        int val_start = fold * fold_size + std::min(fold, remainder);
-        int val_end = val_start + fold_size + (fold < remainder ? 1 : 0);
+        auto [val_start, val_end] = calculate_fold_boundaries(n_samples, fold, n_folds);
 
         // Create indices
         auto all_indices = torch::arange(n_samples, torch::kLong);
@@ -478,12 +500,12 @@ namespace svm_classifier {
             });
 
         // Split data
-        auto X_train = X.index_select(0, train_indices);
-        auto y_train = y.index_select(0, train_indices);
-        auto X_val = X.index_select(0, val_indices);
-        auto y_val = y.index_select(0, val_indices);
-
-        return { X_train, y_train, X_val, y_val };
+        return {
+            X.index_select(0, train_indices),
+            y.index_select(0, train_indices),
+            X.index_select(0, val_indices),
+            y.index_select(0, val_indices)
+        };
     }
 
     std::vector<nlohmann::json> SVMClassifier::generate_param_combinations(const nlohmann::json& param_grid)

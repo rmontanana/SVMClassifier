@@ -4,6 +4,46 @@
 
 namespace svm_classifier {
 
+    namespace {
+        // Helper function to validate and extract numeric value from JSON
+        template<typename T>
+        T get_numeric_value(const nlohmann::json& config, const std::string& key, const std::string& type_name) {
+            if (!config[key].is_number()) {
+                throw std::invalid_argument(key + " must be a " + type_name);
+            }
+            return config[key].get<T>();
+        }
+
+        // Helper function to validate and extract integer value from JSON
+        int get_integer_value(const nlohmann::json& config, const std::string& key) {
+            if (!config[key].is_number_integer()) {
+                throw std::invalid_argument(key + " must be an integer");
+            }
+            return config[key].get<int>();
+        }
+
+        // Helper function to validate and extract boolean value from JSON
+        bool get_boolean_value(const nlohmann::json& config, const std::string& key) {
+            if (!config[key].is_boolean()) {
+                throw std::invalid_argument(key + " must be a boolean");
+            }
+            return config[key].get<bool>();
+        }
+
+        // Helper function to validate and extract string value from JSON
+        std::string get_string_value(const nlohmann::json& config, const std::string& key) {
+            if (!config[key].is_string()) {
+                throw std::invalid_argument(key + " must be a string");
+            }
+            return config[key].get<std::string>();
+        }
+
+        // Helper function to validate gamma (used in multiple places)
+        bool is_valid_gamma(double gamma) {
+            return gamma > 0.0 || gamma == -1.0;
+        }
+    } // anonymous namespace
+
     KernelParameters::KernelParameters()
         : kernel_type_(KernelType::LINEAR)
         , multiclass_strategy_(MulticlassStrategy::ONE_VS_REST)
@@ -27,88 +67,50 @@ namespace svm_classifier {
     {
         // Set kernel type first as it affects validation
         if (config.contains("kernel")) {
-            if (config["kernel"].is_string()) {
-                set_kernel_type(string_to_kernel_type(config["kernel"]));
-            } else {
-                throw std::invalid_argument("Kernel must be a string");
-            }
+            set_kernel_type(string_to_kernel_type(get_string_value(config, "kernel")));
         }
 
         // Set multiclass strategy
         if (config.contains("multiclass_strategy")) {
-            if (config["multiclass_strategy"].is_string()) {
-                set_multiclass_strategy(string_to_multiclass_strategy(config["multiclass_strategy"]));
-            } else {
-                throw std::invalid_argument("Multiclass strategy must be a string");
-            }
+            set_multiclass_strategy(string_to_multiclass_strategy(get_string_value(config, "multiclass_strategy")));
         }
 
         // Set common parameters
         if (config.contains("C")) {
-            if (config["C"].is_number()) {
-                set_C(config["C"]);
-            } else {
-                throw std::invalid_argument("C must be a number");
-            }
+            set_C(get_numeric_value<double>(config, "C", "number"));
         }
 
         if (config.contains("tolerance")) {
-            if (config["tolerance"].is_number()) {
-                set_tolerance(config["tolerance"]);
-            } else {
-                throw std::invalid_argument("Tolerance must be a number");
-            }
+            set_tolerance(get_numeric_value<double>(config, "tolerance", "number"));
         }
 
         if (config.contains("max_iterations")) {
-            if (config["max_iterations"].is_number_integer()) {
-                set_max_iterations(config["max_iterations"]);
-            } else {
-                throw std::invalid_argument("Max iterations must be an integer");
-            }
+            set_max_iterations(get_integer_value(config, "max_iterations"));
         }
 
         if (config.contains("probability")) {
-            if (config["probability"].is_boolean()) {
-                set_probability(config["probability"]);
-            } else {
-                throw std::invalid_argument("Probability must be a boolean");
-            }
+            set_probability(get_boolean_value(config, "probability"));
         }
 
         // Set kernel-specific parameters
         if (config.contains("gamma")) {
-            if (config["gamma"].is_number()) {
-                set_gamma(config["gamma"]);
-            } else if (config["gamma"].is_string() && config["gamma"] == "auto") {
+            if (config["gamma"].is_string() && config["gamma"] == "auto") {
                 set_gamma(-1.0); // Auto gamma
             } else {
-                throw std::invalid_argument("Gamma must be a number or 'auto'");
+                set_gamma(get_numeric_value<double>(config, "gamma", "number"));
             }
         }
 
         if (config.contains("degree")) {
-            if (config["degree"].is_number_integer()) {
-                set_degree(config["degree"]);
-            } else {
-                throw std::invalid_argument("Degree must be an integer");
-            }
+            set_degree(get_integer_value(config, "degree"));
         }
 
         if (config.contains("coef0")) {
-            if (config["coef0"].is_number()) {
-                set_coef0(config["coef0"]);
-            } else {
-                throw std::invalid_argument("Coef0 must be a number");
-            }
+            set_coef0(get_numeric_value<double>(config, "coef0", "number"));
         }
 
         if (config.contains("cache_size")) {
-            if (config["cache_size"].is_number()) {
-                set_cache_size(config["cache_size"]);
-            } else {
-                throw std::invalid_argument("Cache size must be a number");
-            }
+            set_cache_size(get_numeric_value<double>(config, "cache_size", "number"));
         }
 
         // Validate all parameters
@@ -192,12 +194,10 @@ namespace svm_classifier {
 
     void KernelParameters::set_gamma(double gamma)
     {
-        // Allow negative values for auto gamma (-1.0)
-        if (gamma > 0.0 || gamma == -1.0) {
-            gamma_ = gamma;
-        } else {
+        if (!is_valid_gamma(gamma)) {
             throw std::invalid_argument("Gamma must be positive or -1 for auto");
         }
+        gamma_ = gamma;
     }
 
     void KernelParameters::set_degree(int degree)
@@ -278,9 +278,7 @@ namespace svm_classifier {
                 break;
 
             case KernelType::RBF:
-                if (gamma_ > 0.0 || gamma_ == -1.0) {
-                    // Valid gamma (positive or auto)
-                } else {
+                if (!is_valid_gamma(gamma_)) {
                     throw std::invalid_argument("RBF kernel gamma must be positive or auto (-1)");
                 }
                 break;
@@ -289,18 +287,14 @@ namespace svm_classifier {
                 if (degree_ < 1) {
                     throw std::invalid_argument("Polynomial degree must be >= 1");
                 }
-                if (gamma_ > 0.0 || gamma_ == -1.0) {
-                    // Valid gamma
-                } else {
+                if (!is_valid_gamma(gamma_)) {
                     throw std::invalid_argument("Polynomial kernel gamma must be positive or auto (-1)");
                 }
                 // coef0 can be any real number
                 break;
 
             case KernelType::SIGMOID:
-                if (gamma_ > 0.0 || gamma_ == -1.0) {
-                    // Valid gamma
-                } else {
+                if (!is_valid_gamma(gamma_)) {
                     throw std::invalid_argument("Sigmoid kernel gamma must be positive or auto (-1)");
                 }
                 // coef0 can be any real number
