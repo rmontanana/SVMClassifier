@@ -50,7 +50,7 @@ OPTIONS:
     -b, --build-type TYPE   Build type: Release, Debug, RelWithDebInfo (default: Release)
     -p, --prefix PATH       Installation prefix (default: /usr/local)
     -j, --jobs NUM          Number of parallel jobs (default: $(nproc))
-    -t, --torch-version VER PyTorch version to download (default: 2.1.0)
+    -t, --torch-version VER PyTorch version to download (default: 2.8.0)
     --skip-tests            Skip running tests after build
     --clean                 Clean build directory before building
     -v, --verbose           Enable verbose output

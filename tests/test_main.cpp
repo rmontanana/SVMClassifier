@@ -27,16 +27,17 @@ struct GlobalTestSetup {
         try {
             // Try FBGEMM first, fallback to default if not available
             torch::globalContext().setQEngine(at::QEngine::FBGEMM);
-        } catch (const std::exception&) {
+        }
+        catch (const std::exception&) {
             // Use default engine if FBGEMM is not available
             torch::globalContext().setQEngine(at::QEngine::NoQEngine);
         }
 
-        std::cout << "SVM Classifier Test Suite" << std::endl;
-        std::cout << "=========================" << std::endl;
-        std::cout << "PyTorch version: " << TORCH_VERSION << std::endl;
-        std::cout << "Using " << torch::get_num_threads() << " thread(s)" << std::endl;
-        std::cout << std::endl;
+        // std::cout << "SVM Classifier Test Suite" << std::endl;
+        // std::cout << "=========================" << std::endl;
+        // std::cout << "PyTorch version: " << TORCH_VERSION << std::endl;
+        // std::cout << "Using " << torch::get_num_threads() << " thread(s)" << std::endl;
+        // std::cout << std::endl;
     }
 
     ~GlobalTestSetup()

@@ -78,7 +78,7 @@ OPTIONS:
     --memory-check          Run memory checks with valgrind
     --build-dir DIR         Build directory (default: build_validation)
     --install-dir DIR       Install directory (default: install_validation)
-    --torch-version VER     PyTorch version (default: 2.1.0)
+    --torch-version VER     PyTorch version (default: 2.8.0)
 
 EXAMPLES:
     $0                      # Standard validation

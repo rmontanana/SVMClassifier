@@ -126,7 +126,7 @@ install:
 .PHONY: test
 test: build
 	@printf "$(BOLD)$(GREEN)$(TEST) Running all tests...$(NC)\n"
-	@$(BUILD_DIR)/tests/svm_classifier_tests
+	@cd $(BUILD_DIR) && ctest --output-on-failure --parallel $(JOBS)
 	@printf "$(BOLD)$(GREEN)$(CHECK) Tests completed!$(NC)\n"
 
 .PHONY: test-ctest
