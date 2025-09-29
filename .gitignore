@@ -34,6 +34,7 @@
 
 build_Release
 build_Debug
+build_coverage
 build
 libtorch
 Testing

@@ -42,8 +42,7 @@ struct GlobalTestSetup {
 
     ~GlobalTestSetup()
     {
-        std::cout << std::endl;
-        std::cout << "Test suite completed." << std::endl;
+        // Cleanup - no output to avoid CTest parsing issues
     }
 };
 

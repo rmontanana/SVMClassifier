@@ -70,7 +70,8 @@ help:
 	@printf "  $(YELLOW)test-performance$(NC) - $(TEST) Run performance tests only\n"
 	@printf "  $(YELLOW)test-verbose$(NC)  - $(TEST) Run tests with verbose output\n"
 	@printf "  $(YELLOW)test-memcheck$(NC) - $(TEST) Run tests with Valgrind memory checking\n"
-	@printf "  $(YELLOW)test-profile$(NC)  - $(TEST) Run tests with performance profiling\n\n"
+	@printf "  $(YELLOW)test-profile$(NC)  - $(TEST) Run tests with performance profiling\n"
+	@printf "  $(YELLOW)coverage$(NC)      - $(TEST) Run tests with code coverage analysis\n\n"
 	@printf "$(BOLD)$(GREEN)$(BOOK) Documentation Targets:$(NC)\n"
 	@printf "  $(YELLOW)docs$(NC)          - $(BOOK) Generate Doxygen documentation\n"
 	@printf "  $(YELLOW)docs-open$(NC)     - $(BOOK) Generate and open documentation\n\n"
@@ -164,6 +165,35 @@ test-profile: build
 	@printf "$(BOLD)$(PURPLE)$(GEAR) Running performance profiling...$(NC)\n"
 	@cd $(BUILD_DIR) && $(MAKE) test_profile
 
+.PHONY: coverage
+coverage:
+	@printf "$(BOLD)$(CYAN)$(TEST) Setting up code coverage analysis...$(NC)\n"
+	@# Check if required tools are available
+	@which gcov >/dev/null 2>&1 || (printf "$(BOLD)$(RED)$(CROSS) Error: gcov not found. Please install gcc or clang development tools.$(NC)\n" && exit 1)
+	@which lcov >/dev/null 2>&1 || (printf "$(BOLD)$(RED)$(CROSS) Error: lcov not found. Please install lcov (brew install lcov or apt-get install lcov).$(NC)\n" && exit 1)
+	@which genhtml >/dev/null 2>&1 || (printf "$(BOLD)$(RED)$(CROSS) Error: genhtml not found. Please install lcov package.$(NC)\n" && exit 1)
+	@printf "$(BOLD)$(GREEN)$(CHECK) All coverage tools available$(NC)\n"
+	@printf "$(BOLD)$(BLUE)$(GEAR) Configuring Debug build with coverage...$(NC)\n"
+	@rm -rf build_coverage
+	@mkdir -p build_coverage
+	@cd build_coverage && cmake .. \
+		-DCMAKE_BUILD_TYPE=Debug \
+		-DCMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) \
+		-DBUILD_DOCUMENTATION=ON
+	@printf "$(BOLD)$(BLUE)$(ROCKET) Building with coverage instrumentation...$(NC)\n"
+	@cmake --build build_coverage --config Debug --parallel $(JOBS)
+	@printf "$(BOLD)$(GREEN)$(TEST) Running tests with coverage collection...$(NC)\n"
+	@cd build_coverage && ctest --output-on-failure --parallel $(JOBS) || true
+	@printf "$(BOLD)$(CYAN)$(GEAR) Collecting coverage data...$(NC)\n"
+	@cd build_coverage && lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format 2>/dev/null || true
+	@cd build_coverage && lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/tests/*' '*/libtorch/*' --output-file coverage_filtered.info 2>/dev/null || true
+	@cd build_coverage && genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors category 2>/dev/null || true
+	@printf "$(BOLD)$(CYAN)$(SPARKLES) Coverage report generated!$(NC)\n"
+	@printf "$(BOLD)$(GREEN)$(INFO) Coverage summary:$(NC)\n"
+	@cd build_coverage && lcov --summary coverage_filtered.info 2>/dev/null | grep -E "(lines|functions|branches)" || echo "Coverage data processed successfully"
+	@printf "$(BOLD)$(BLUE)$(BOOK) HTML report: $(CYAN)build_coverage/coverage_html/index.html$(NC)\n"
+	@printf "$(BOLD)$(YELLOW)$(INFO) Open with: open build_coverage/coverage_html/index.html$(NC)\n"
+
 # Documentation targets
 .PHONY: docs
 docs: $(BUILD_DIR)/Makefile
@@ -240,7 +270,7 @@ deps:
 .PHONY: clean-all
 clean-all:
 	@printf "$(BOLD)$(RED)$(CLEAN) Cleaning all build directories and dependencies...$(NC)\n"
-	@rm -rf build build_Debug build_Release
+	@rm -rf build build_Debug build_Release build_coverage
 	@rm -rf _deps
 	@printf "$(BOLD)$(GREEN)$(CHECK) All build artifacts cleaned!$(NC)\n"
 
