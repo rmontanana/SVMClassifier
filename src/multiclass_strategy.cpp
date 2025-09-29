@@ -28,6 +28,9 @@ namespace svm_classifier {
     {
         cleanup_models();
 
+        // Validate input tensors
+        converter.validate_tensors(X, y);
+
         auto start_time = std::chrono::high_resolution_clock::now();
 
         // Store parameters and determine library type
@@ -411,6 +414,9 @@ namespace svm_classifier {
         DataConverter& converter)
     {
         cleanup_models();
+
+        // Validate input tensors
+        converter.validate_tensors(X, y);
 
         auto start_time = std::chrono::high_resolution_clock::now();
 

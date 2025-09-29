@@ -448,11 +448,10 @@ TEST_CASE("MulticlassStrategy Error Handling", "[unit][multiclass_strategy]")
         OneVsRestStrategy strategy;
         auto [X, y] = generate_multiclass_data(50, 2, 2);
 
-        // Invalid C parameter
+        // Test that set_C validates parameters properly
         params.set_kernel_type(KernelType::LINEAR);
-        params.set_C(-1.0);  // Invalid
 
-        REQUIRE_THROWS(strategy.fit(X, y, params, converter));
+        REQUIRE_THROWS_AS(params.set_C(-1.0), std::invalid_argument);  // Should throw during parameter setting
     }
 
     SECTION("Mismatched tensor dimensions")
