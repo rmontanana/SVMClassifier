@@ -192,7 +192,7 @@ coverage:
 	@printf "$(BOLD)$(GREEN)$(INFO) Coverage summary:$(NC)\n"
 	@cd build_coverage && lcov --summary coverage_filtered.info 2>/dev/null | grep -E "(lines|functions|branches)" || echo "Coverage data processed successfully"
 	@printf "$(BOLD)$(BLUE)$(BOOK) HTML report: $(CYAN)build_coverage/coverage_html/index.html$(NC)\n"
-	@printf "$(BOLD)$(YELLOW)$(INFO) Open with: open build_coverage/coverage_html/index.html$(NC)\n"
+	@printf "$(BOLD)$(YELLOW)$(INFO) Open with: open/xdg-open build_coverage/coverage_html/index.html$(NC)\n"
 
 # Documentation targets
 .PHONY: docs
