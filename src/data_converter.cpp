@@ -97,24 +97,20 @@ namespace svm_classifier {
         return linear_problem;
     }
 
-    svm_node* DataConverter::to_svm_node(const torch::Tensor& sample)
+    std::vector<svm_node> DataConverter::to_svm_node(const torch::Tensor& sample)
     {
         validate_tensor_properties(sample, 1, "sample");
 
         auto sample_cpu = ensure_cpu_tensor(sample);
-        single_svm_nodes_ = sample_to_svm_nodes(sample_cpu);
-
-        return single_svm_nodes_.data();
+        return sample_to_svm_nodes(sample_cpu);
     }
 
-    feature_node* DataConverter::to_feature_node(const torch::Tensor& sample)
+    std::vector<feature_node> DataConverter::to_feature_node(const torch::Tensor& sample)
     {
         validate_tensor_properties(sample, 1, "sample");
 
         auto sample_cpu = ensure_cpu_tensor(sample);
-        single_linear_nodes_ = sample_to_linear_nodes(sample_cpu);
-
-        return single_linear_nodes_.data();
+        return sample_to_linear_nodes(sample_cpu);
     }
 
     torch::Tensor DataConverter::from_predictions(const std::vector<double>& predictions)
@@ -205,8 +201,7 @@ namespace svm_classifier {
         linear_x_space_.clear();
         linear_y_space_.clear();
 
-        single_svm_nodes_.clear();
-        single_linear_nodes_.clear();
+
 
         n_features_ = 0;
         n_samples_ = 0;

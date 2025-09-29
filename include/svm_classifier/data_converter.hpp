@@ -55,14 +55,14 @@ namespace svm_classifier {
          * @param sample Feature tensor of shape (n_features,)
          * @return Pointer to svm_node array
          */
-        svm_node* to_svm_node(const torch::Tensor& sample);
+        std::vector<svm_node> to_svm_node(const torch::Tensor& sample);
 
         /**
          * @brief Convert single sample to liblinear format
          * @param sample Feature tensor of shape (n_features,)
          * @return Pointer to feature_node array
          */
-        feature_node* to_feature_node(const torch::Tensor& sample);
+        std::vector<feature_node> to_feature_node(const torch::Tensor& sample);
 
         /**
          * @brief Convert predictions back to PyTorch tensor
@@ -137,10 +137,7 @@ namespace svm_classifier {
         std::vector<feature_node*> linear_x_space_;
         std::vector<double> linear_y_space_;
 
-        // Single sample storage (for prediction)
-        // Thread-local storage for single sample conversions
-        std::vector<svm_node> single_svm_nodes_;
-        std::vector<feature_node> single_linear_nodes_;
+
 
         /**
          * @brief Convert tensor data to libsvm nodes for multiple samples

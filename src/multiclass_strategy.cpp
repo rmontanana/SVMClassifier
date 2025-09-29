@@ -140,9 +140,9 @@ namespace svm_classifier {
             if (library_type_ == SVMLibrary::LIBSVM) {
                 for (size_t j = 0; j < svm_models_.size(); ++j) {
                     if (svm_models_[j]) {
-                        auto sample_node = converter.to_svm_node(sample);
-                        double prob_estimates[2];
-                        svm_predict_probability(svm_models_[j].get(), sample_node, prob_estimates);
+                        auto sample_node_vec = converter.to_svm_node(sample);
+                        double prob_estimates[classes_.size()];
+                        svm_predict_probability(svm_models_[j].get(), sample_node_vec.data(), prob_estimates);
                         sample_probs.push_back(prob_estimates[0]); // Probability of positive class
                     } else {
                         sample_probs.push_back(0.0);
@@ -155,9 +155,9 @@ namespace svm_classifier {
             } else {
                 for (size_t j = 0; j < linear_models_.size(); ++j) {
                     if (linear_models_[j]) {
-                        auto sample_node = converter.to_feature_node(sample);
-                        double prob_estimates[2];
-                        predict_probability(linear_models_[j].get(), sample_node, prob_estimates);
+                        auto sample_node_vec = converter.to_feature_node(sample);
+                        double prob_estimates[classes_.size()];
+                        predict_probability(linear_models_[j].get(), sample_node_vec.data(), prob_estimates);
                         sample_probs.push_back(prob_estimates[0]); // Probability of positive class
                     } else {
                         sample_probs.push_back(0.0);
@@ -204,9 +204,9 @@ namespace svm_classifier {
             if (library_type_ == SVMLibrary::LIBSVM) {
                 for (size_t j = 0; j < svm_models_.size(); ++j) {
                     if (svm_models_[j]) {
-                        auto sample_node = converter.to_svm_node(sample);
+                        auto sample_node_vec = converter.to_svm_node(sample);
                         double decision_value;
-                        svm_predict_values(svm_models_[j].get(), sample_node, &decision_value);
+                        svm_predict_values(svm_models_[j].get(), sample_node_vec.data(), &decision_value);
                         sample_decisions.push_back(decision_value);
                     } else {
                         sample_decisions.push_back(0.0);
@@ -219,9 +219,9 @@ namespace svm_classifier {
             } else {
                 for (size_t j = 0; j < linear_models_.size(); ++j) {
                     if (linear_models_[j]) {
-                        auto sample_node = converter.to_feature_node(sample);
+                        auto sample_node_vec = converter.to_feature_node(sample);
                         double decision_value;
-                        predict_values(linear_models_[j].get(), sample_node, &decision_value);
+                        predict_values(linear_models_[j].get(), sample_node_vec.data(), &decision_value);
                         sample_decisions.push_back(decision_value);
                     } else {
                         sample_decisions.push_back(0.0);
@@ -543,14 +543,14 @@ namespace svm_classifier {
 
             for (size_t j = 0; j < class_pairs_.size(); ++j) {
                 if (library_type_ == SVMLibrary::LIBSVM && svm_models_[j]) {
-                    auto sample_node = converter.to_svm_node(sample);
+                    auto sample_node_vec = converter.to_svm_node(sample);
                     double decision_value;
-                    svm_predict_values(svm_models_[j].get(), sample_node, &decision_value);
+                    svm_predict_values(svm_models_[j].get(), sample_node_vec.data(), &decision_value);
                     sample_decisions.push_back(decision_value);
                 } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[j]) {
-                    auto sample_node = converter.to_feature_node(sample);
+                    auto sample_node_vec = converter.to_feature_node(sample);
                     double decision_value;
-                    predict_values(linear_models_[j].get(), sample_node, &decision_value);
+                    predict_values(linear_models_[j].get(), sample_node_vec.data(), &decision_value);
                     sample_decisions.push_back(decision_value);
                 } else {
                     sample_decisions.push_back(0.0);

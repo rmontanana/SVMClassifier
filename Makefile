@@ -179,18 +179,19 @@ coverage:
 	@cd build_coverage && cmake .. \
 		-DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) \
-		-DBUILD_DOCUMENTATION=ON
+		-DBUILD_DOCUMENTATION=ON \
+		-DENABLE_COVERAGE=ON
 	@printf "$(BOLD)$(BLUE)$(ROCKET) Building with coverage instrumentation...$(NC)\n"
 	@cmake --build build_coverage --config Debug --parallel $(JOBS)
 	@printf "$(BOLD)$(GREEN)$(TEST) Running tests with coverage collection...$(NC)\n"
-	@cd build_coverage && ctest --output-on-failure --parallel $(JOBS) || true
+	@cd build_coverage && ulimit -s 8192 && ctest --output-on-failure --parallel $(JOBS)
 	@printf "$(BOLD)$(CYAN)$(GEAR) Collecting coverage data...$(NC)\n"
-	@cd build_coverage && lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format 2>/dev/null || true
-	@cd build_coverage && lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/tests/*' '*/libtorch/*' --output-file coverage_filtered.info 2>/dev/null || true
-	@cd build_coverage && genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors category 2>/dev/null || true
+	@cd build_coverage && lcov --capture --directory . --base-directory .. --output-file coverage.info --ignore-errors inconsistent,unsupported,format,source
+	@cd build_coverage && lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/tests/*' '*/libtorch/*' '*/src/catch2/*' --output-file coverage_filtered.info --ignore-errors inconsistent,source
+	@cd build_coverage && genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors category,inconsistent,source
 	@printf "$(BOLD)$(CYAN)$(SPARKLES) Coverage report generated!$(NC)\n"
 	@printf "$(BOLD)$(GREEN)$(INFO) Coverage summary:$(NC)\n"
-	@cd build_coverage && lcov --summary coverage_filtered.info 2>/dev/null | grep -E "(lines|functions|branches)" || echo "Coverage data processed successfully"
+	@cd build_coverage && lcov --summary coverage_filtered.info --ignore-errors inconsistent,source | grep -E "(lines|functions|branches)"
 	@printf "$(BOLD)$(BLUE)$(BOOK) HTML report: $(CYAN)build_coverage/coverage_html/index.html$(NC)\n"
 	@printf "$(BOLD)$(YELLOW)$(INFO) Open with: open/xdg-open build_coverage/coverage_html/index.html$(NC)\n"
 

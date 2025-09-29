@@ -161,7 +161,7 @@ TEST_CASE("DataConverter Single Sample Conversion", "[unit][data_converter]")
 
         auto nodes = converter.to_svm_node(sample);
 
-        REQUIRE(nodes != nullptr);
+        REQUIRE(!nodes.empty());
 
         // Should have non-zero features plus terminator
         // This is implementation-specific and depends on sparse handling
@@ -173,7 +173,7 @@ TEST_CASE("DataConverter Single Sample Conversion", "[unit][data_converter]")
 
         auto nodes = converter.to_feature_node(sample);
 
-        REQUIRE(nodes != nullptr);
+        REQUIRE(!nodes.empty());
     }
 
     SECTION("Invalid single sample")

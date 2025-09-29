@@ -8,7 +8,8 @@
       "Bash(git commit:*)",
       "Bash(cmake:*)",
       "Bash(lcov:*)",
-      "Bash(genhtml:*)"
+      "Bash(genhtml:*)",
+      "Read(//Users/rmontanana/Code/**)"
     ],
     "deny": [],
     "ask": []

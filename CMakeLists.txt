@@ -18,6 +18,16 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Compiler flags
+option(ENABLE_COVERAGE "Enable code coverage" OFF)
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+if(ENABLE_COVERAGE)
+    message(STATUS "Code coverage enabled")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fprofile-instr-generate")
+endif()
+
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
