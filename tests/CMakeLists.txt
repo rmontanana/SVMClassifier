@@ -13,6 +13,7 @@ set(TEST_SOURCES
     test_data_converter.cpp
     test_multiclass_strategy.cpp
     test_kernel_parameters.cpp
+    test_types.cpp
 )
 
 # Create test executable
