@@ -1,6 +1,29 @@
 # SVMClassifier Project Makefile
 # Provides convenient targets for common development tasks
 
+# Colors and icons for enhanced visual output
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+BLUE := \033[0;34m
+PURPLE := \033[0;35m
+CYAN := \033[0;36m
+WHITE := \033[0;37m
+BOLD := \033[1m
+NC := \033[0m # No Color
+
+# Icons
+CHECK := ✅
+CROSS := ❌
+ROCKET := 🚀
+GEAR := ⚙️
+BOOK := 📚
+TEST := 🧪
+CLEAN := 🧹
+INFO := ℹ️
+WARN := ⚠️
+SPARKLES := ✨
+
 # Configuration
 BUILD_DIR := build
 BUILD_TYPE := Release
@@ -31,57 +54,54 @@ all: help
 # Help target
 .PHONY: help
 help:
-	@echo "SVMClassifier Development Makefile"
-	@echo ""
-	@echo "Build Targets:"
-	@echo "  build         - Build the project (Release)"
-	@echo "  debug         - Build with debug symbols"
-	@echo "  clean         - Clean build directory"
-	@echo "  rebuild       - Clean and build"
-	@echo "  install       - Run full installation with dependencies"
-	@echo ""
-	@echo "Testing Targets:"
-	@echo "  test          - Run all tests (direct execution)"
-	@echo "  test-ctest    - Run all tests (via CTest)"
-	@echo "  test-unit     - Run unit tests only"
-	@echo "  test-integration - Run integration tests only"
-	@echo "  test-performance - Run performance tests only"
-	@echo "  test-verbose  - Run tests with verbose output"
-	@echo "  test-memcheck - Run tests with Valgrind memory checking"
-	@echo "  test-profile  - Run tests with performance profiling"
-	@echo ""
-	@echo "Documentation Targets:"
-	@echo "  docs          - Generate Doxygen documentation"
-	@echo "  docs-open     - Generate and open documentation"
-	@echo ""
-	@echo "Development Targets:"
-	@echo "  format        - Format code with clang-format"
-	@echo "  lint          - Run static analysis with clang-tidy"
-	@echo "  validate      - Run comprehensive build validation"
-	@echo "  examples      - Build and run examples"
-	@echo ""
-	@echo "Utility Targets:"
-	@echo "  info          - Show build configuration info"
-	@echo "  deps          - Show project dependencies"
-	@echo "  clean-all     - Clean everything including external deps"
-	@echo ""
-	@echo "Configuration:"
-	@echo "  BUILD_TYPE=$(BUILD_TYPE)"
-	@echo "  CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH)"
-	@echo "  JOBS=$(JOBS)"
+	@printf "$(BOLD)$(BLUE)$(ROCKET) SVMClassifier Development Makefile$(NC)\n"
+	@printf "$(CYAN)===============================================$(NC)\n\n"
+	@printf "$(BOLD)$(GREEN)$(GEAR) Build Targets:$(NC)\n"
+	@printf "  $(YELLOW)build$(NC)         - $(ROCKET) Build the project (Release)\n"
+	@printf "  $(YELLOW)debug$(NC)         - $(GEAR) Build with debug symbols\n"
+	@printf "  $(YELLOW)clean$(NC)         - $(CLEAN) Clean build directory\n"
+	@printf "  $(YELLOW)rebuild$(NC)       - $(SPARKLES) Clean and build\n"
+	@printf "  $(YELLOW)install$(NC)       - $(ROCKET) Run full installation with dependencies\n\n"
+	@printf "$(BOLD)$(GREEN)$(TEST) Testing Targets:$(NC)\n"
+	@printf "  $(YELLOW)test$(NC)          - $(TEST) Run all tests (direct execution)\n"
+	@printf "  $(YELLOW)test-ctest$(NC)    - $(TEST) Run all tests (via CTest)\n"
+	@printf "  $(YELLOW)test-unit$(NC)     - $(TEST) Run unit tests only\n"
+	@printf "  $(YELLOW)test-integration$(NC) - $(TEST) Run integration tests only\n"
+	@printf "  $(YELLOW)test-performance$(NC) - $(TEST) Run performance tests only\n"
+	@printf "  $(YELLOW)test-verbose$(NC)  - $(TEST) Run tests with verbose output\n"
+	@printf "  $(YELLOW)test-memcheck$(NC) - $(TEST) Run tests with Valgrind memory checking\n"
+	@printf "  $(YELLOW)test-profile$(NC)  - $(TEST) Run tests with performance profiling\n\n"
+	@printf "$(BOLD)$(GREEN)$(BOOK) Documentation Targets:$(NC)\n"
+	@printf "  $(YELLOW)docs$(NC)          - $(BOOK) Generate Doxygen documentation\n"
+	@printf "  $(YELLOW)docs-open$(NC)     - $(BOOK) Generate and open documentation\n\n"
+	@printf "$(BOLD)$(GREEN)$(SPARKLES) Development Targets:$(NC)\n"
+	@printf "  $(YELLOW)format$(NC)        - $(SPARKLES) Format code with clang-format\n"
+	@printf "  $(YELLOW)lint$(NC)          - $(GEAR) Run static analysis with clang-tidy\n"
+	@printf "  $(YELLOW)validate$(NC)      - $(CHECK) Run comprehensive build validation\n"
+	@printf "  $(YELLOW)examples$(NC)      - $(ROCKET) Build and run examples\n\n"
+	@printf "$(BOLD)$(GREEN)$(INFO) Utility Targets:$(NC)\n"
+	@printf "  $(YELLOW)info$(NC)          - $(INFO) Show build configuration info\n"
+	@printf "  $(YELLOW)deps$(NC)          - $(INFO) Show project dependencies\n"
+	@printf "  $(YELLOW)clean-all$(NC)     - $(CLEAN) Clean everything including external deps\n\n"
+	@printf "$(BOLD)$(PURPLE)$(GEAR) Configuration:$(NC)\n"
+	@printf "  $(CYAN)BUILD_TYPE$(NC)=$(GREEN)$(BUILD_TYPE)$(NC)\n"
+	@printf "  $(CYAN)CMAKE_PREFIX_PATH$(NC)=$(GREEN)$(CMAKE_PREFIX_PATH)$(NC)\n"
+	@printf "  $(CYAN)JOBS$(NC)=$(GREEN)$(JOBS)$(NC)\n"
 
 # Build targets
 .PHONY: build
 build: $(BUILD_DIR)/Makefile
-	@echo "Building SVMClassifier ($(BUILD_TYPE))..."
+	@printf "$(BOLD)$(BLUE)$(ROCKET) Building SVMClassifier ($(BUILD_TYPE))...$(NC)\n"
 	@cmake --build $(BUILD_DIR) --config $(BUILD_TYPE) --parallel $(JOBS)
+	@printf "$(BOLD)$(GREEN)$(CHECK) Build completed successfully!$(NC)\n"
 
 .PHONY: debug
 debug:
+	@printf "$(BOLD)$(YELLOW)$(GEAR) Building in debug mode...$(NC)\n"
 	@$(MAKE) build BUILD_TYPE=Debug BUILD_DIR=build_debug
 
 $(BUILD_DIR)/Makefile:
-	@echo "Configuring CMake build..."
+	@printf "$(BOLD)$(CYAN)$(GEAR) Configuring CMake build...$(NC)\n"
 	@mkdir -p $(BUILD_DIR)
 	@cd $(BUILD_DIR) && cmake .. \
 		-DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
@@ -90,136 +110,139 @@ $(BUILD_DIR)/Makefile:
 
 .PHONY: clean
 clean:
-	@echo "Cleaning build directory..."
+	@printf "$(BOLD)$(YELLOW)$(CLEAN) Cleaning build directory...$(NC)\n"
 	@rm -rf $(BUILD_DIR)
+	@printf "$(BOLD)$(GREEN)$(CHECK) Clean completed!$(NC)\n"
 
 .PHONY: rebuild
 rebuild: clean build
 
 .PHONY: install
 install:
-	@echo "Running full installation..."
+	@printf "$(BOLD)$(PURPLE)$(ROCKET) Running full installation...$(NC)\n"
 	@./install.sh
 
 # Testing targets
 .PHONY: test
 test: build
-	@echo "Running all tests..."
+	@printf "$(BOLD)$(GREEN)$(TEST) Running all tests...$(NC)\n"
 	@$(BUILD_DIR)/tests/svm_classifier_tests
+	@printf "$(BOLD)$(GREEN)$(CHECK) Tests completed!$(NC)\n"
 
 .PHONY: test-ctest
 test-ctest: build
-	@echo "Running tests with CTest..."
+	@printf "$(BOLD)$(GREEN)$(TEST) Running tests with CTest...$(NC)\n"
 	@cd $(BUILD_DIR) && ctest --output-on-failure --parallel $(JOBS)
 
 .PHONY: test-unit
 test-unit: build
-	@echo "Running unit tests..."
+	@printf "$(BOLD)$(BLUE)$(TEST) Running unit tests...$(NC)\n"
 	@$(BUILD_DIR)/tests/svm_classifier_tests "[unit]"
 
 .PHONY: test-integration
 test-integration: build
-	@echo "Running integration tests..."
+	@printf "$(BOLD)$(PURPLE)$(TEST) Running integration tests...$(NC)\n"
 	@$(BUILD_DIR)/tests/svm_classifier_tests "[integration]"
 
 .PHONY: test-performance
 test-performance: build
-	@echo "Running performance tests..."
+	@printf "$(BOLD)$(YELLOW)$(TEST) Running performance tests...$(NC)\n"
 	@$(BUILD_DIR)/tests/svm_classifier_tests "[performance]"
 
 .PHONY: test-verbose
 test-verbose: build
-	@echo "Running tests with verbose output..."
+	@printf "$(BOLD)$(CYAN)$(TEST) Running tests with verbose output...$(NC)\n"
 	@$(BUILD_DIR)/tests/svm_classifier_tests -s
 
 .PHONY: test-memcheck
 test-memcheck: build
-	@echo "Running memory check tests..."
+	@printf "$(BOLD)$(RED)$(WARN) Running memory check tests...$(NC)\n"
 	@cd $(BUILD_DIR) && $(MAKE) test_memcheck
 
 .PHONY: test-profile
 test-profile: build
-	@echo "Running performance profiling..."
+	@printf "$(BOLD)$(PURPLE)$(GEAR) Running performance profiling...$(NC)\n"
 	@cd $(BUILD_DIR) && $(MAKE) test_profile
 
 # Documentation targets
 .PHONY: docs
 docs: $(BUILD_DIR)/Makefile
-	@echo "Generating documentation..."
+	@printf "$(BOLD)$(BLUE)$(BOOK) Generating documentation...$(NC)\n"
 	@cd $(BUILD_DIR) && $(MAKE) doxygen
+	@printf "$(BOLD)$(GREEN)$(CHECK) Documentation generated successfully!$(NC)\n"
 
 .PHONY: docs-open
 docs-open: docs
-	@echo "Opening documentation..."
+	@printf "$(BOLD)$(CYAN)$(BOOK) Opening documentation...$(NC)\n"
 	@./build_docs.sh --open
 
 # Development targets
 .PHONY: format
 format:
-	@echo "Formatting code with clang-format..."
+	@printf "$(BOLD)$(YELLOW)$(SPARKLES) Formatting code with clang-format...$(NC)\n"
 	@find src include tests examples -name "*.cpp" -o -name "*.hpp" | xargs clang-format -i
+	@printf "$(BOLD)$(GREEN)$(CHECK) Code formatting completed!$(NC)\n"
 
 .PHONY: lint
 lint:
-	@echo "Running static analysis with clang-tidy..."
+	@printf "$(BOLD)$(PURPLE)$(GEAR) Running static analysis with clang-tidy...$(NC)\n"
 	@clang-tidy src/* -- -I include -std=c++17
 
 .PHONY: validate
 validate:
-	@echo "Running comprehensive build validation..."
+	@printf "$(BOLD)$(BLUE)$(CHECK) Running comprehensive build validation...$(NC)\n"
 	@./validate_build.sh
 
 .PHONY: examples
 examples: build
-	@echo "Building examples..."
+	@printf "$(BOLD)$(GREEN)$(ROCKET) Building examples...$(NC)\n"
 	@cd $(BUILD_DIR) && $(MAKE) examples
-	@echo "Running basic example..."
+	@printf "$(BOLD)$(CYAN)$(ROCKET) Running basic example...$(NC)\n"
 	@$(BUILD_DIR)/examples/basic_usage
-	@echo "Running advanced example..."
+	@printf "$(BOLD)$(CYAN)$(ROCKET) Running advanced example...$(NC)\n"
 	@$(BUILD_DIR)/examples/advanced_usage
 
 # Utility targets
 .PHONY: info
 info:
-	@echo "Build Configuration:"
-	@echo "  Project: SVMClassifier"
-	@echo "  Build Type: $(BUILD_TYPE)"
-	@echo "  Build Directory: $(BUILD_DIR)"
-	@echo "  Jobs: $(JOBS)"
-	@echo "  CMAKE_PREFIX_PATH: $(CMAKE_PREFIX_PATH)"
-	@echo "  Detected PyTorch: $(DETECTED_TORCH)"
-	@echo ""
-	@echo "Available Tools:"
-	@which cmake >/dev/null 2>&1 && echo "  ✓ CMake: $$(cmake --version | head -n1)" || echo "  ✗ CMake: Not found"
-	@which doxygen >/dev/null 2>&1 && echo "  ✓ Doxygen: $$(doxygen --version)" || echo "  ✗ Doxygen: Not found"
-	@which valgrind >/dev/null 2>&1 && echo "  ✓ Valgrind: $$(valgrind --version | head -n1)" || echo "  ✗ Valgrind: Not found"
-	@which clang-format >/dev/null 2>&1 && echo "  ✓ clang-format: $$(clang-format --version | head -n1)" || echo "  ✗ clang-format: Not found"
-	@which clang-tidy >/dev/null 2>&1 && echo "  ✓ clang-tidy: $$(clang-tidy --version | head -n1)" || echo "  ✗ clang-tidy: Not found"
+	@printf "$(BOLD)$(BLUE)$(INFO) Build Configuration:$(NC)\n"
+	@printf "  $(CYAN)Project$(NC): $(YELLOW)SVMClassifier$(NC)\n"
+	@printf "  $(CYAN)Build Type$(NC): $(GREEN)$(BUILD_TYPE)$(NC)\n"
+	@printf "  $(CYAN)Build Directory$(NC): $(GREEN)$(BUILD_DIR)$(NC)\n"
+	@printf "  $(CYAN)Jobs$(NC): $(GREEN)$(JOBS)$(NC)\n"
+	@printf "  $(CYAN)CMAKE_PREFIX_PATH$(NC): $(GREEN)$(CMAKE_PREFIX_PATH)$(NC)\n"
+	@printf "  $(CYAN)Detected PyTorch$(NC): $(GREEN)$(DETECTED_TORCH)$(NC)\n\n"
+	@printf "$(BOLD)$(GREEN)$(GEAR) Available Tools:$(NC)\n"
+	@which cmake >/dev/null 2>&1 && printf "  $(GREEN)$(CHECK) CMake$(NC): $$(cmake --version | head -n1)\n" || printf "  $(RED)$(CROSS) CMake$(NC): Not found\n"
+	@which doxygen >/dev/null 2>&1 && printf "  $(GREEN)$(CHECK) Doxygen$(NC): $$(doxygen --version)\n" || printf "  $(RED)$(CROSS) Doxygen$(NC): Not found\n"
+	@which valgrind >/dev/null 2>&1 && printf "  $(GREEN)$(CHECK) Valgrind$(NC): $$(valgrind --version | head -n1)\n" || printf "  $(RED)$(CROSS) Valgrind$(NC): Not found\n"
+	@which clang-format >/dev/null 2>&1 && printf "  $(GREEN)$(CHECK) clang-format$(NC): $$(clang-format --version | head -n1)\n" || printf "  $(RED)$(CROSS) clang-format$(NC): Not found\n"
+	@which clang-tidy >/dev/null 2>&1 && printf "  $(GREEN)$(CHECK) clang-tidy$(NC): $$(clang-tidy --version | head -n1)\n" || printf "  $(RED)$(CROSS) clang-tidy$(NC): Not found\n"
 
 .PHONY: deps
 deps:
-	@echo "Project Dependencies:"
-	@echo "  Required:"
-	@echo "    - CMake (>= 3.15)"
-	@echo "    - C++17 compiler (GCC/Clang)"
-	@echo "    - PyTorch/libtorch"
-	@echo "  Fetched Automatically:"
-	@echo "    - libsvm (v332)"
-	@echo "    - liblinear (v249)"
-	@echo "    - nlohmann/json (v3.11.3)"
-	@echo "    - Catch2 (v3.4.0)"
-	@echo "  Optional:"
-	@echo "    - Doxygen (for documentation)"
-	@echo "    - Valgrind (for memory checking)"
-	@echo "    - clang-format (for code formatting)"
-	@echo "    - clang-tidy (for static analysis)"
+	@printf "$(BOLD)$(PURPLE)$(INFO) Project Dependencies:$(NC)\n"
+	@printf "  $(BOLD)$(GREEN)Required:$(NC)\n"
+	@printf "    $(YELLOW)•$(NC) CMake (>= 3.15)\n"
+	@printf "    $(YELLOW)•$(NC) C++17 compiler (GCC/Clang)\n"
+	@printf "    $(YELLOW)•$(NC) PyTorch/libtorch\n"
+	@printf "  $(BOLD)$(BLUE)Fetched Automatically:$(NC)\n"
+	@printf "    $(CYAN)•$(NC) libsvm (v332)\n"
+	@printf "    $(CYAN)•$(NC) liblinear (v249)\n"
+	@printf "    $(CYAN)•$(NC) nlohmann/json (v3.11.3)\n"
+	@printf "    $(CYAN)•$(NC) Catch2 (v3.4.0)\n"
+	@printf "  $(BOLD)$(YELLOW)Optional:$(NC)\n"
+	@printf "    $(PURPLE)•$(NC) Doxygen (for documentation)\n"
+	@printf "    $(PURPLE)•$(NC) Valgrind (for memory checking)\n"
+	@printf "    $(PURPLE)•$(NC) clang-format (for code formatting)\n"
+	@printf "    $(PURPLE)•$(NC) clang-tidy (for static analysis)\n"
 
 .PHONY: clean-all
 clean-all:
-	@echo "Cleaning all build directories and dependencies..."
+	@printf "$(BOLD)$(RED)$(CLEAN) Cleaning all build directories and dependencies...$(NC)\n"
 	@rm -rf build build_Debug build_Release
 	@rm -rf _deps
-	@echo "All build artifacts cleaned."
+	@printf "$(BOLD)$(GREEN)$(CHECK) All build artifacts cleaned!$(NC)\n"
 
 # Aliases for convenience
 .PHONY: configure
