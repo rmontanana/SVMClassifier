@@ -23,8 +23,14 @@ struct GlobalTestSetup {
         // Set manual seed for reproducibility
         torch::manual_seed(42);
 
-        // Disable PyTorch warnings for cleaner test output
-        torch::globalContext().setQEngine(at::QEngine::FBGEMM);
+        // Set default quantized engine (safer option for compatibility)
+        try {
+            // Try FBGEMM first, fallback to default if not available
+            torch::globalContext().setQEngine(at::QEngine::FBGEMM);
+        } catch (const std::exception&) {
+            // Use default engine if FBGEMM is not available
+            torch::globalContext().setQEngine(at::QEngine::NoQEngine);
+        }
 
         std::cout << "SVM Classifier Test Suite" << std::endl;
         std::cout << "=========================" << std::endl;
