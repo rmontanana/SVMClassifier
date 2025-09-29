@@ -161,6 +161,26 @@ namespace svm_classifier {
             int class_idx);
 
         /**
+         * @brief Get decision value for a single sample
+         * @param sample Single feature tensor
+         * @param model_idx Index of the model
+         * @param converter Data converter
+         * @return Decision value
+         */
+        double get_sample_decision_value(const torch::Tensor& sample, size_t model_idx,
+            DataConverter& converter) const;
+
+        /**
+         * @brief Get probability estimate for a single sample
+         * @param sample Single feature tensor
+         * @param model_idx Index of the model
+         * @param converter Data converter
+         * @return Probability of positive class
+         */
+        double get_sample_probability(const torch::Tensor& sample, size_t model_idx,
+            DataConverter& converter) const;
+
+        /**
          * @brief Clean up all models
          */
         void cleanup_models();
@@ -242,6 +262,14 @@ namespace svm_classifier {
             const KernelParameters& params,
             DataConverter& converter,
             int model_idx);
+
+        /**
+         * @brief Get decision value for a single sample
+         * @param sample Single feature tensor
+         * @param model_idx Index of the model
+         * @return Decision value
+         */
+        double get_sample_decision_value(const torch::Tensor& sample, size_t model_idx) const;
 
         /**
          * @brief Voting mechanism for OvO predictions

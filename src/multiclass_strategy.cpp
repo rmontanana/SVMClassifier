@@ -10,6 +10,69 @@
 
 namespace svm_classifier {
 
+    namespace {
+        // Helper function to setup SVM parameters
+        svm_parameter setup_svm_parameters(const KernelParameters& params, int n_features) {
+            svm_parameter svm_params;
+            svm_params.svm_type = C_SVC;
+
+            switch (params.get_kernel_type()) {
+                case KernelType::RBF:
+                    svm_params.kernel_type = RBF;
+                    break;
+                case KernelType::POLYNOMIAL:
+                    svm_params.kernel_type = POLY;
+                    break;
+                case KernelType::SIGMOID:
+                    svm_params.kernel_type = SIGMOID;
+                    break;
+                default:
+                    throw std::runtime_error("Invalid kernel type for libsvm");
+            }
+
+            svm_params.degree = params.get_degree();
+            svm_params.gamma = (params.get_gamma() == -1.0) ? 1.0 / n_features : params.get_gamma();
+            svm_params.coef0 = params.get_coef0();
+            svm_params.cache_size = params.get_cache_size();
+            svm_params.eps = params.get_tolerance();
+            svm_params.C = params.get_C();
+            svm_params.nr_weight = 0;
+            svm_params.weight_label = nullptr;
+            svm_params.weight = nullptr;
+            svm_params.nu = 0.5;
+            svm_params.p = 0.1;
+            svm_params.shrinking = 1;
+            svm_params.probability = params.get_probability() ? 1 : 0;
+
+            return svm_params;
+        }
+
+        // Helper function to setup linear parameters
+        parameter setup_linear_parameters(const KernelParameters& params) {
+            parameter linear_params;
+
+            // Use solver that supports probability estimates if probability is requested
+            if (params.get_probability()) {
+                linear_params.solver_type = L2R_LR; // Logistic regression - supports probability
+            } else {
+                linear_params.solver_type = L2R_L2LOSS_SVC_DUAL; // Default solver for C-SVC
+            }
+
+            linear_params.C = params.get_C();
+            linear_params.eps = params.get_tolerance();
+            linear_params.nr_weight = 0;
+            linear_params.weight_label = nullptr;
+            linear_params.weight = nullptr;
+            linear_params.p = 0.1;
+            linear_params.nu = 0.5;
+            linear_params.init_sol = nullptr;
+            linear_params.regularize_bias = 1;
+            linear_params.w_recalc = false;
+
+            return linear_params;
+        }
+    } // anonymous namespace
+
     // OneVsRestStrategy Implementation
     OneVsRestStrategy::OneVsRestStrategy()
         : library_type_(SVMLibrary::LIBLINEAR)
@@ -134,43 +197,20 @@ namespace svm_classifier {
         std::vector<std::vector<double>> probabilities;
         probabilities.reserve(X.size(0));
 
+        size_t num_models = library_type_ == SVMLibrary::LIBSVM ? svm_models_.size() : linear_models_.size();
+
         for (int i = 0; i < X.size(0); ++i) {
             auto sample = X[i];
             std::vector<double> sample_probs;
             sample_probs.reserve(classes_.size());
 
-            if (library_type_ == SVMLibrary::LIBSVM) {
-                for (size_t j = 0; j < svm_models_.size(); ++j) {
-                    if (svm_models_[j]) {
-                        auto sample_node_vec = data_converters_.empty() ?
-                            converter.to_svm_node(sample) : data_converters_[j]->to_svm_node(sample);
-                        double prob_estimates[2];
-                        svm_predict_probability(svm_models_[j].get(), sample_node_vec.data(), prob_estimates);
-                        sample_probs.push_back(prob_estimates[0]); // Probability of positive class
-                    } else {
-                        sample_probs.push_back(0.0);
-                    }
-                }
-                // For binary classification with single model, add complement probability
-                if (classes_.size() == 2 && svm_models_.size() == 1 && !sample_probs.empty()) {
-                    sample_probs.push_back(1.0 - sample_probs[0]);
-                }
-            } else {
-                for (size_t j = 0; j < linear_models_.size(); ++j) {
-                    if (linear_models_[j]) {
-                        auto sample_node_vec = data_converters_.empty() ?
-                            converter.to_feature_node(sample) : data_converters_[j]->to_feature_node(sample);
-                        double prob_estimates[2];
-                        predict_probability(linear_models_[j].get(), sample_node_vec.data(), prob_estimates);
-                        sample_probs.push_back(prob_estimates[0]); // Probability of positive class
-                    } else {
-                        sample_probs.push_back(0.0);
-                    }
-                }
-                // For binary classification with single model, add complement probability
-                if (classes_.size() == 2 && linear_models_.size() == 1 && !sample_probs.empty()) {
-                    sample_probs.push_back(1.0 - sample_probs[0]);
-                }
+            for (size_t j = 0; j < num_models; ++j) {
+                sample_probs.push_back(get_sample_probability(sample, j, converter));
+            }
+
+            // For binary classification with single model, add complement probability
+            if (classes_.size() == 2 && num_models == 1 && !sample_probs.empty()) {
+                sample_probs.push_back(1.0 - sample_probs[0]);
             }
 
             // Normalize probabilities
@@ -200,43 +240,20 @@ namespace svm_classifier {
         std::vector<std::vector<double>> decision_values;
         decision_values.reserve(X.size(0));
 
+        size_t num_models = library_type_ == SVMLibrary::LIBSVM ? svm_models_.size() : linear_models_.size();
+
         for (int i = 0; i < X.size(0); ++i) {
             auto sample = X[i];
             std::vector<double> sample_decisions;
             sample_decisions.reserve(classes_.size());
 
-            if (library_type_ == SVMLibrary::LIBSVM) {
-                for (size_t j = 0; j < svm_models_.size(); ++j) {
-                    if (svm_models_[j]) {
-                        auto sample_node_vec = data_converters_.empty() ?
-                            converter.to_svm_node(sample) : data_converters_[j]->to_svm_node(sample);
-                        double decision_value;
-                        svm_predict_values(svm_models_[j].get(), sample_node_vec.data(), &decision_value);
-                        sample_decisions.push_back(decision_value);
-                    } else {
-                        sample_decisions.push_back(0.0);
-                    }
-                }
-                // For binary classification with single model, add negative decision value
-                if (classes_.size() == 2 && svm_models_.size() == 1 && !sample_decisions.empty()) {
-                    sample_decisions.push_back(-sample_decisions[0]);
-                }
-            } else {
-                for (size_t j = 0; j < linear_models_.size(); ++j) {
-                    if (linear_models_[j]) {
-                        auto sample_node_vec = data_converters_.empty() ?
-                            converter.to_feature_node(sample) : data_converters_[j]->to_feature_node(sample);
-                        double decision_value;
-                        predict_values(linear_models_[j].get(), sample_node_vec.data(), &decision_value);
-                        sample_decisions.push_back(decision_value);
-                    } else {
-                        sample_decisions.push_back(0.0);
-                    }
-                }
-                // For binary classification with single model, add negative decision value
-                if (classes_.size() == 2 && linear_models_.size() == 1 && !sample_decisions.empty()) {
-                    sample_decisions.push_back(-sample_decisions[0]);
-                }
+            for (size_t j = 0; j < num_models; ++j) {
+                sample_decisions.push_back(get_sample_decision_value(sample, j, converter));
+            }
+
+            // For binary classification with single model, add negative decision value
+            if (classes_.size() == 2 && num_models == 1 && !sample_decisions.empty()) {
+                sample_decisions.push_back(-sample_decisions[0]);
             }
 
             decision_values.push_back(sample_decisions);
@@ -289,38 +306,7 @@ namespace svm_classifier {
         if (library_type_ == SVMLibrary::LIBSVM) {
             // Use libsvm
             auto problem = converter.to_svm_problem(X, y_binary);
-
-            // Setup SVM parameters
-            svm_parameter svm_params;
-            svm_params.svm_type = C_SVC;
-
-            switch (params.get_kernel_type()) {
-                case KernelType::RBF:
-                    svm_params.kernel_type = RBF;
-                    break;
-                case KernelType::POLYNOMIAL:
-                    svm_params.kernel_type = POLY;
-                    break;
-                case KernelType::SIGMOID:
-                    svm_params.kernel_type = SIGMOID;
-                    break;
-                default:
-                    throw std::runtime_error("Invalid kernel type for libsvm");
-            }
-
-            svm_params.degree = params.get_degree();
-            svm_params.gamma = (params.get_gamma() == -1.0) ? 1.0 / X.size(1) : params.get_gamma();
-            svm_params.coef0 = params.get_coef0();
-            svm_params.cache_size = params.get_cache_size();
-            svm_params.eps = params.get_tolerance();
-            svm_params.C = params.get_C();
-            svm_params.nr_weight = 0;
-            svm_params.weight_label = nullptr;
-            svm_params.weight = nullptr;
-            svm_params.nu = 0.5;
-            svm_params.p = 0.1;
-            svm_params.shrinking = 1;
-            svm_params.probability = params.get_probability() ? 1 : 0;
+            auto svm_params = setup_svm_parameters(params, X.size(1));
 
             // Check parameters
             const char* error_msg = svm_check_parameter(problem.get(), &svm_params);
@@ -339,25 +325,7 @@ namespace svm_classifier {
         } else {
             // Use liblinear
             auto problem = converter.to_linear_problem(X, y_binary);
-
-            // Setup linear parameters
-            parameter linear_params;
-            // Use solver that supports probability estimates if probability is requested
-            if (params.get_probability()) {
-                linear_params.solver_type = L2R_LR; // Logistic regression - supports probability
-            } else {
-                linear_params.solver_type = L2R_L2LOSS_SVC_DUAL; // Default solver for C-SVC
-            }
-            linear_params.C = params.get_C();
-            linear_params.eps = params.get_tolerance();
-            linear_params.nr_weight = 0;
-            linear_params.weight_label = nullptr;
-            linear_params.weight = nullptr;
-            linear_params.p = 0.1;
-            linear_params.nu = 0.5;
-            linear_params.init_sol = nullptr;
-            linear_params.regularize_bias = 1;
-            linear_params.w_recalc = false;
+            auto linear_params = setup_linear_parameters(params);
 
             // Check parameters
             const char* error_msg = check_parameter(problem.get(), &linear_params);
@@ -378,6 +346,44 @@ namespace svm_classifier {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
         return duration.count() / 1000.0;
+    }
+
+    double OneVsRestStrategy::get_sample_decision_value(const torch::Tensor& sample,
+        size_t model_idx, DataConverter& converter) const
+    {
+        if (library_type_ == SVMLibrary::LIBSVM && svm_models_[model_idx]) {
+            auto sample_node_vec = data_converters_.empty() ?
+                converter.to_svm_node(sample) : data_converters_[model_idx]->to_svm_node(sample);
+            double decision_value;
+            svm_predict_values(svm_models_[model_idx].get(), sample_node_vec.data(), &decision_value);
+            return decision_value;
+        } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[model_idx]) {
+            auto sample_node_vec = data_converters_.empty() ?
+                converter.to_feature_node(sample) : data_converters_[model_idx]->to_feature_node(sample);
+            double decision_value;
+            predict_values(linear_models_[model_idx].get(), sample_node_vec.data(), &decision_value);
+            return decision_value;
+        }
+        return 0.0;
+    }
+
+    double OneVsRestStrategy::get_sample_probability(const torch::Tensor& sample,
+        size_t model_idx, DataConverter& converter) const
+    {
+        if (library_type_ == SVMLibrary::LIBSVM && svm_models_[model_idx]) {
+            auto sample_node_vec = data_converters_.empty() ?
+                converter.to_svm_node(sample) : data_converters_[model_idx]->to_svm_node(sample);
+            double prob_estimates[2];
+            svm_predict_probability(svm_models_[model_idx].get(), sample_node_vec.data(), prob_estimates);
+            return prob_estimates[0]; // Probability of positive class
+        } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[model_idx]) {
+            auto sample_node_vec = data_converters_.empty() ?
+                converter.to_feature_node(sample) : data_converters_[model_idx]->to_feature_node(sample);
+            double prob_estimates[2];
+            predict_probability(linear_models_[model_idx].get(), sample_node_vec.data(), prob_estimates);
+            return prob_estimates[0]; // Probability of positive class
+        }
+        return 0.0;
     }
 
     void OneVsRestStrategy::cleanup_models()
@@ -551,19 +557,7 @@ namespace svm_classifier {
             sample_decisions.reserve(class_pairs_.size());
 
             for (size_t j = 0; j < class_pairs_.size(); ++j) {
-                if (library_type_ == SVMLibrary::LIBSVM && svm_models_[j]) {
-                    auto sample_node_vec = data_converters_[j]->to_svm_node(sample);
-                    double decision_value;
-                    svm_predict_values(svm_models_[j].get(), sample_node_vec.data(), &decision_value);
-                    sample_decisions.push_back(decision_value);
-                } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[j]) {
-                    auto sample_node_vec = data_converters_[j]->to_feature_node(sample);
-                    double decision_value;
-                    predict_values(linear_models_[j].get(), sample_node_vec.data(), &decision_value);
-                    sample_decisions.push_back(decision_value);
-                } else {
-                    sample_decisions.push_back(0.0);
-                }
+                sample_decisions.push_back(get_sample_decision_value(sample, j));
             }
 
             decision_values.push_back(sample_decisions);
@@ -607,38 +601,7 @@ namespace svm_classifier {
         if (library_type_ == SVMLibrary::LIBSVM) {
             // Use libsvm
             auto problem = converter.to_svm_problem(filtered_X, binary_y);
-
-            // Setup SVM parameters (similar to OneVsRest)
-            svm_parameter svm_params;
-            svm_params.svm_type = C_SVC;
-
-            switch (params.get_kernel_type()) {
-                case KernelType::RBF:
-                    svm_params.kernel_type = RBF;
-                    break;
-                case KernelType::POLYNOMIAL:
-                    svm_params.kernel_type = POLY;
-                    break;
-                case KernelType::SIGMOID:
-                    svm_params.kernel_type = SIGMOID;
-                    break;
-                default:
-                    throw std::runtime_error("Invalid kernel type for libsvm");
-            }
-
-            svm_params.degree = params.get_degree();
-            svm_params.gamma = (params.get_gamma() == -1.0) ? 1.0 / filtered_X.size(1) : params.get_gamma();
-            svm_params.coef0 = params.get_coef0();
-            svm_params.cache_size = params.get_cache_size();
-            svm_params.eps = params.get_tolerance();
-            svm_params.C = params.get_C();
-            svm_params.nr_weight = 0;
-            svm_params.weight_label = nullptr;
-            svm_params.weight = nullptr;
-            svm_params.nu = 0.5;
-            svm_params.p = 0.1;
-            svm_params.shrinking = 1;
-            svm_params.probability = params.get_probability() ? 1 : 0;
+            auto svm_params = setup_svm_parameters(params, filtered_X.size(1));
 
             // Check parameters
             const char* error_msg = svm_check_parameter(problem.get(), &svm_params);
@@ -656,25 +619,7 @@ namespace svm_classifier {
         } else {
             // Use liblinear
             auto problem = converter.to_linear_problem(filtered_X, binary_y);
-
-            // Setup linear parameters
-            parameter linear_params;
-            // Use solver that supports probability estimates if probability is requested
-            if (params.get_probability()) {
-                linear_params.solver_type = L2R_LR; // Logistic regression - supports probability
-            } else {
-                linear_params.solver_type = L2R_L2LOSS_SVC_DUAL; // Default solver for C-SVC
-            }
-            linear_params.C = params.get_C();
-            linear_params.eps = params.get_tolerance();
-            linear_params.nr_weight = 0;
-            linear_params.weight_label = nullptr;
-            linear_params.weight = nullptr;
-            linear_params.p = 0.1;
-            linear_params.nu = 0.5;
-            linear_params.init_sol = nullptr;
-            linear_params.regularize_bias = 1;
-            linear_params.w_recalc = false;
+            auto linear_params = setup_linear_parameters(params);
 
             // Check parameters
             const char* error_msg = check_parameter(problem.get(), &linear_params);
@@ -695,6 +640,22 @@ namespace svm_classifier {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
         return duration.count() / 1000.0;
+    }
+
+    double OneVsOneStrategy::get_sample_decision_value(const torch::Tensor& sample, size_t model_idx) const
+    {
+        if (library_type_ == SVMLibrary::LIBSVM && svm_models_[model_idx]) {
+            auto sample_node_vec = data_converters_[model_idx]->to_svm_node(sample);
+            double decision_value;
+            svm_predict_values(svm_models_[model_idx].get(), sample_node_vec.data(), &decision_value);
+            return decision_value;
+        } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[model_idx]) {
+            auto sample_node_vec = data_converters_[model_idx]->to_feature_node(sample);
+            double decision_value;
+            predict_values(linear_models_[model_idx].get(), sample_node_vec.data(), &decision_value);
+            return decision_value;
+        }
+        return 0.0;
     }
 
     std::vector<int> OneVsOneStrategy::vote_predictions(const std::vector<std::vector<double>>& decisions)
