@@ -335,7 +335,12 @@ namespace svm_classifier {
 
             // Setup linear parameters
             parameter linear_params;
-            linear_params.solver_type = L2R_L2LOSS_SVC_DUAL; // Default solver for C-SVC
+            // Use solver that supports probability estimates if probability is requested
+            if (params.get_probability()) {
+                linear_params.solver_type = L2R_LR; // Logistic regression - supports probability
+            } else {
+                linear_params.solver_type = L2R_L2LOSS_SVC_DUAL; // Default solver for C-SVC
+            }
             linear_params.C = params.get_C();
             linear_params.eps = params.get_tolerance();
             linear_params.nr_weight = 0;
@@ -643,7 +648,12 @@ namespace svm_classifier {
 
             // Setup linear parameters
             parameter linear_params;
-            linear_params.solver_type = L2R_L2LOSS_SVC_DUAL;
+            // Use solver that supports probability estimates if probability is requested
+            if (params.get_probability()) {
+                linear_params.solver_type = L2R_LR; // Logistic regression - supports probability
+            } else {
+                linear_params.solver_type = L2R_L2LOSS_SVC_DUAL; // Default solver for C-SVC
+            }
             linear_params.C = params.get_C();
             linear_params.eps = params.get_tolerance();
             linear_params.nr_weight = 0;
