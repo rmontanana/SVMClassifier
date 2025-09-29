@@ -217,8 +217,6 @@ namespace svm_classifier {
         std::vector<std::vector<svm_node>> nodes_storage;
         nodes_storage.reserve(X.size(0));
 
-        auto X_acc = X.accessor<float, 2>();
-
         for (int i = 0; i < X.size(0); ++i) {
             nodes_storage.push_back(sample_to_svm_nodes(X[i]));
         }

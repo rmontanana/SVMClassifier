@@ -89,6 +89,8 @@
         "ranges": "cpp",
         "span": "cpp",
         "text_encoding": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "queue": "cpp",
+        "regex": "cpp"
     }
 }

@@ -68,9 +68,9 @@ namespace svm_classifier {
                 auto dummy_x = torch::zeros({ 1, X.size(1) }, X.options());
                 auto extended_X = torch::cat({ X, dummy_x });
 
-                double training_time = train_binary_classifier(extended_X, binary_y, params, converter, 0);
+                train_binary_classifier(extended_X, binary_y, params, converter, 0);
             } else {
-                double training_time = train_binary_classifier(X, binary_y, params, converter, 0);
+                train_binary_classifier(X, binary_y, params, converter, 0);
             }
         } else {
             // Multiclass case: train one classifier per class
@@ -80,11 +80,9 @@ namespace svm_classifier {
                 linear_models_.resize(classes_.size());
             }
 
-            double total_training_time = 0.0;
-
             for (size_t i = 0; i < classes_.size(); ++i) {
                 auto binary_y = create_binary_labels(y, classes_[i]);
-                total_training_time += train_binary_classifier(X, binary_y, params, converter, i);
+                train_binary_classifier(X, binary_y, params, converter, i);
             }
         }
 
@@ -450,12 +448,10 @@ namespace svm_classifier {
             linear_models_.resize(class_pairs_.size());
         }
 
-        double total_training_time = 0.0;
-
         // Train one classifier for each class pair
         for (size_t i = 0; i < class_pairs_.size(); ++i) {
             auto [class1, class2] = class_pairs_[i];
-            total_training_time += train_pairwise_classifier(X, y, class1, class2, params, converter, i);
+            train_pairwise_classifier(X, y, class1, class2, params, converter, i);
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();

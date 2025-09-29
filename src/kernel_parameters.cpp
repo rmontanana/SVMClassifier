@@ -11,10 +11,10 @@ namespace svm_classifier {
         , tolerance_(1e-3)
         , max_iterations_(-1)
         , probability_(false)
+        , cache_size_(200.0)
         , gamma_(-1.0)  // Auto gamma
         , degree_(3)
         , coef0_(0.0)
-        , cache_size_(200.0)
     {
     }
 

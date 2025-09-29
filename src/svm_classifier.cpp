@@ -506,7 +506,7 @@ namespace svm_classifier {
         // Generate all combinations using recursive approach
         std::function<void(int, nlohmann::json&)> generate_combinations =
             [&](int param_idx, nlohmann::json& current_params) {
-            if (param_idx == param_names.size()) {
+            if (static_cast<size_t>(param_idx) == param_names.size()) {
                 combinations.push_back(current_params);
                 return;
             }

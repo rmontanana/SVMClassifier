@@ -5,7 +5,10 @@
       "Bash(CMAKE_PREFIX_PATH=./libtorch make build)",
       "Bash(./build/tests/svm_classifier_tests:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cmake:*)",
+      "Bash(lcov:*)",
+      "Bash(genhtml:*)"
     ],
     "deny": [],
     "ask": []
