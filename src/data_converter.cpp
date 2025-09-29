@@ -92,7 +92,7 @@ namespace svm_classifier {
         linear_problem->n = n_features_;
         linear_problem->x = linear_x_space_.data();
         linear_problem->y = linear_y_space_.data();
-        linear_problem->bias = 1.0; // Add bias term with value 1.0
+        linear_problem->bias = -1.0; // No bias term (-1 means no bias in liblinear)
 
         return linear_problem;
     }

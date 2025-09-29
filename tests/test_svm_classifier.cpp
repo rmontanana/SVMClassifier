@@ -611,7 +611,7 @@ TEST_CASE("SVMClassifier Error Handling", "[integration][svm_classifier]")
 
     SECTION("Invalid training data")
     {
-        auto X_invalid = torch::tensor({ {std::numeric_limits<float>::quiet_NaN(), 1.0} });
+        auto X_invalid = torch::tensor({ {std::numeric_limits<float>::quiet_NaN(), 1.0f} });
         auto y_invalid = torch::tensor({ 0 });
 
         REQUIRE_THROWS_AS(svm.fit(X_invalid, y_invalid), std::invalid_argument);
