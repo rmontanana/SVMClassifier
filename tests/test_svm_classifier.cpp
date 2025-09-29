@@ -8,6 +8,8 @@
 #include <svm_classifier/svm_classifier.hpp>
 #include <torch/torch.h>
 #include <nlohmann/json.hpp>
+#include <fstream>
+#include <cstdio>
 
 using namespace svm_classifier;
 using json = nlohmann::json;
@@ -684,4 +686,80 @@ TEST_CASE("SVMClassifier Reset Functionality", "[integration][svm_classifier]")
     // Should be able to train again after reset
     REQUIRE_NOTHROW(svm.fit(X, y));
     REQUIRE(svm.is_fitted());
+}
+
+TEST_CASE("SVMClassifier Model Persistence", "[integration][svm_classifier][persistence]")
+{
+    SECTION("Save and load model with parameters")
+    {
+        SVMClassifier svm(KernelType::LINEAR);
+        auto [X, y] = generate_test_data(50, 4, 2);
+
+        svm.fit(X, y);
+
+        std::string test_file = "/tmp/test_svm_model.json";
+
+        // Test save_model
+        REQUIRE_NOTHROW(svm.save_model(test_file));
+
+        // Verify file was created
+        std::ifstream file(test_file);
+        REQUIRE(file.good());
+        file.close();
+
+        // Clean up
+        std::remove(test_file.c_str());
+    }
+
+    SECTION("Save model without fitting throws error")
+    {
+        SVMClassifier svm;
+        REQUIRE_THROWS_AS(svm.save_model("/tmp/test_model.json"), std::runtime_error);
+    }
+
+    SECTION("Load model throws not implemented error")
+    {
+        SVMClassifier svm;
+        REQUIRE_THROWS_AS(svm.load_model("/tmp/nonexistent.json"), std::runtime_error);
+    }
+
+    SECTION("Save model with invalid path throws error")
+    {
+        SVMClassifier svm(KernelType::LINEAR);
+        auto [X, y] = generate_test_data(30, 3, 2);
+        svm.fit(X, y);
+
+        REQUIRE_THROWS_AS(svm.save_model("/invalid/path/model.json"), std::runtime_error);
+    }
+}
+
+TEST_CASE("SVMClassifier Feature Importance", "[integration][svm_classifier][feature_importance]")
+{
+    SECTION("Feature importance only available for linear kernels")
+    {
+        SVMClassifier svm(KernelType::RBF);
+        auto [X, y] = generate_test_data(50, 4, 2);
+
+        svm.fit(X, y);
+
+        REQUIRE_THROWS_AS(svm.get_feature_importance(), std::runtime_error);
+    }
+
+    SECTION("Feature importance requires fitted model")
+    {
+        SVMClassifier svm(KernelType::LINEAR);
+
+        REQUIRE_THROWS_AS(svm.get_feature_importance(), std::runtime_error);
+    }
+
+    SECTION("Feature importance not yet implemented")
+    {
+        SVMClassifier svm(KernelType::LINEAR);
+        auto [X, y] = generate_test_data(50, 4, 2);
+
+        svm.fit(X, y);
+
+        // This should throw "not yet implemented" error
+        REQUIRE_THROWS_AS(svm.get_feature_importance(), std::runtime_error);
+    }
 }
