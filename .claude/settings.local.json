@@ -9,7 +9,13 @@
       "Bash(cmake:*)",
       "Bash(lcov:*)",
       "Bash(genhtml:*)",
-      "Read(//Users/rmontanana/Code/**)"
+      "Read(//Users/rmontanana/Code/**)",
+      "Bash(./svm_classifier_tests \"[multiclass]\")",
+      "Bash(./build/svm_classifier_tests:*)",
+      "Bash(gdb:*)",
+      "Bash(g++:*)",
+      "Bash(valgrind:*)",
+      "Bash(timeout 60 valgrind:*)"
     ],
     "deny": [],
     "ask": []

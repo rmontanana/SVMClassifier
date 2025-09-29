@@ -133,6 +133,7 @@ namespace svm_classifier {
     private:
         std::vector<std::unique_ptr<svm_model>> svm_models_;      ///< SVM models (one per class)
         std::vector<std::unique_ptr<model>> linear_models_;       ///< Linear models (one per class)
+        std::vector<std::unique_ptr<DataConverter>> data_converters_; ///< Data converters (one per class) to keep training data alive
         KernelParameters params_;                                 ///< Stored parameters
         SVMLibrary library_type_;                                ///< Which library is being used
 
@@ -206,6 +207,7 @@ namespace svm_classifier {
         std::vector<std::unique_ptr<svm_model>> svm_models_;      ///< SVM models (one per pair)
         std::vector<std::unique_ptr<model>> linear_models_;       ///< Linear models (one per pair)
         std::vector<std::pair<int, int>> class_pairs_;           ///< Class pairs for each model
+        std::vector<std::unique_ptr<DataConverter>> data_converters_; ///< Data converters (one per pair) to keep training data alive
         KernelParameters params_;                                 ///< Stored parameters
         SVMLibrary library_type_;                                ///< Which library is being used
 

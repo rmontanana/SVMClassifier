@@ -32,11 +32,11 @@ JOBS := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 # Detect PyTorch installation
 TORCH_PATHS := \
+	./libtorch \
 	/opt/homebrew/lib/python3.11/site-packages/torch \
 	/opt/homebrew/lib/python3.12/site-packages/torch \
 	/usr/local/lib/python3.11/site-packages/torch \
-	$(shell python3 -c "import torch; print(torch.utils.cmake_prefix_path)" 2>/dev/null) \
-	./libtorch
+	$(shell python3 -c "import torch; print(torch.utils.cmake_prefix_path)" 2>/dev/null)
 
 define find_torch
 $(foreach path,$(TORCH_PATHS),$(if $(wildcard $(path)/share/cmake/Torch),$(path),))
@@ -44,7 +44,7 @@ endef
 
 DETECTED_TORCH := $(firstword $(call find_torch))
 ifneq ($(DETECTED_TORCH),)
-	CMAKE_PREFIX_PATH := $(DETECTED_TORCH)
+	CMAKE_PREFIX_PATH := $(abspath $(DETECTED_TORCH))
 endif
 
 # Default target

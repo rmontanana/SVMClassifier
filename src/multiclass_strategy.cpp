@@ -79,10 +79,12 @@ namespace svm_classifier {
             } else {
                 linear_models_.resize(classes_.size());
             }
+            data_converters_.resize(classes_.size());
 
             for (size_t i = 0; i < classes_.size(); ++i) {
                 auto binary_y = create_binary_labels(y, classes_[i]);
-                train_binary_classifier(X, binary_y, params, converter, i);
+                data_converters_[i] = std::make_unique<DataConverter>();
+                train_binary_classifier(X, binary_y, params, *data_converters_[i], i);
             }
         }
 
@@ -140,8 +142,9 @@ namespace svm_classifier {
             if (library_type_ == SVMLibrary::LIBSVM) {
                 for (size_t j = 0; j < svm_models_.size(); ++j) {
                     if (svm_models_[j]) {
-                        auto sample_node_vec = converter.to_svm_node(sample);
-                        double prob_estimates[classes_.size()];
+                        auto sample_node_vec = data_converters_.empty() ?
+                            converter.to_svm_node(sample) : data_converters_[j]->to_svm_node(sample);
+                        double prob_estimates[2];
                         svm_predict_probability(svm_models_[j].get(), sample_node_vec.data(), prob_estimates);
                         sample_probs.push_back(prob_estimates[0]); // Probability of positive class
                     } else {
@@ -155,8 +158,9 @@ namespace svm_classifier {
             } else {
                 for (size_t j = 0; j < linear_models_.size(); ++j) {
                     if (linear_models_[j]) {
-                        auto sample_node_vec = converter.to_feature_node(sample);
-                        double prob_estimates[classes_.size()];
+                        auto sample_node_vec = data_converters_.empty() ?
+                            converter.to_feature_node(sample) : data_converters_[j]->to_feature_node(sample);
+                        double prob_estimates[2];
                         predict_probability(linear_models_[j].get(), sample_node_vec.data(), prob_estimates);
                         sample_probs.push_back(prob_estimates[0]); // Probability of positive class
                     } else {
@@ -204,7 +208,8 @@ namespace svm_classifier {
             if (library_type_ == SVMLibrary::LIBSVM) {
                 for (size_t j = 0; j < svm_models_.size(); ++j) {
                     if (svm_models_[j]) {
-                        auto sample_node_vec = converter.to_svm_node(sample);
+                        auto sample_node_vec = data_converters_.empty() ?
+                            converter.to_svm_node(sample) : data_converters_[j]->to_svm_node(sample);
                         double decision_value;
                         svm_predict_values(svm_models_[j].get(), sample_node_vec.data(), &decision_value);
                         sample_decisions.push_back(decision_value);
@@ -219,7 +224,8 @@ namespace svm_classifier {
             } else {
                 for (size_t j = 0; j < linear_models_.size(); ++j) {
                     if (linear_models_[j]) {
-                        auto sample_node_vec = converter.to_feature_node(sample);
+                        auto sample_node_vec = data_converters_.empty() ?
+                            converter.to_feature_node(sample) : data_converters_[j]->to_feature_node(sample);
                         double decision_value;
                         predict_values(linear_models_[j].get(), sample_node_vec.data(), &decision_value);
                         sample_decisions.push_back(decision_value);
@@ -391,6 +397,7 @@ namespace svm_classifier {
             }
         }
         linear_models_.clear();
+        data_converters_.clear();
 
         is_trained_ = false;
     }
@@ -441,17 +448,19 @@ namespace svm_classifier {
             }
         }
 
-        // Initialize model storage
+        // Initialize model storage and data converters
         if (library_type_ == SVMLibrary::LIBSVM) {
             svm_models_.resize(class_pairs_.size());
         } else {
             linear_models_.resize(class_pairs_.size());
         }
+        data_converters_.resize(class_pairs_.size());
 
         // Train one classifier for each class pair
         for (size_t i = 0; i < class_pairs_.size(); ++i) {
             auto [class1, class2] = class_pairs_[i];
-            train_pairwise_classifier(X, y, class1, class2, params, converter, i);
+            data_converters_[i] = std::make_unique<DataConverter>();
+            train_pairwise_classifier(X, y, class1, class2, params, *data_converters_[i], i);
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -543,12 +552,12 @@ namespace svm_classifier {
 
             for (size_t j = 0; j < class_pairs_.size(); ++j) {
                 if (library_type_ == SVMLibrary::LIBSVM && svm_models_[j]) {
-                    auto sample_node_vec = converter.to_svm_node(sample);
+                    auto sample_node_vec = data_converters_[j]->to_svm_node(sample);
                     double decision_value;
                     svm_predict_values(svm_models_[j].get(), sample_node_vec.data(), &decision_value);
                     sample_decisions.push_back(decision_value);
                 } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[j]) {
-                    auto sample_node_vec = converter.to_feature_node(sample);
+                    auto sample_node_vec = data_converters_[j]->to_feature_node(sample);
                     double decision_value;
                     predict_values(linear_models_[j].get(), sample_node_vec.data(), &decision_value);
                     sample_decisions.push_back(decision_value);
@@ -742,6 +751,7 @@ namespace svm_classifier {
             }
         }
         linear_models_.clear();
+        data_converters_.clear();
 
         is_trained_ = false;
     }
