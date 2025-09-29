@@ -195,17 +195,15 @@ TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]")
     {
         KernelParameters params;
 
-        // Invalid C
+        // Invalid C - should throw during parameter setting
         params.set_kernel_type(KernelType::LINEAR);
-        params.set_C(-1.0);
-        REQUIRE_THROWS_AS(params.validate(), std::invalid_argument);
+        REQUIRE_THROWS_AS(params.set_C(-1.0), std::invalid_argument);
 
-        // Reset C to valid value
+        // Set valid C value
         params.set_C(1.0);
 
-        // Invalid tolerance
-        params.set_tolerance(-1e-3);
-        REQUIRE_THROWS_AS(params.validate(), std::invalid_argument);
+        // Invalid tolerance - should throw during parameter setting
+        REQUIRE_THROWS_AS(params.set_tolerance(-1e-3), std::invalid_argument);
     }
 }
 
