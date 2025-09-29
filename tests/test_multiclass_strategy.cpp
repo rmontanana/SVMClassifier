@@ -514,4 +514,29 @@ TEST_CASE("MulticlassStrategy Memory Management", "[unit][multiclass_strategy]")
             REQUIRE(static_cast<int64_t>(predictions.size()) == X.size(0));
         }
     }
+
+    SECTION("OneVsOneStrategy supports_probability check")
+    {
+        OneVsOneStrategy strategy;
+        DataConverter converter;
+        auto [X, y] = generate_multiclass_data(40, 2, 3);
+
+        // Test with probability disabled
+        KernelParameters params_no_prob;
+        params_no_prob.set_kernel_type(KernelType::LINEAR);
+        params_no_prob.set_probability(false);
+
+        strategy.fit(X, y, params_no_prob, converter);
+        REQUIRE_FALSE(strategy.supports_probability());
+
+        // Test with probability enabled
+        OneVsOneStrategy strategy2;
+        DataConverter converter2;
+        KernelParameters params_with_prob;
+        params_with_prob.set_kernel_type(KernelType::LINEAR);
+        params_with_prob.set_probability(true);
+
+        strategy2.fit(X, y, params_with_prob, converter2);
+        REQUIRE(strategy2.supports_probability());
+    }
 }

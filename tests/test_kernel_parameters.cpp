@@ -402,4 +402,19 @@ TEST_CASE("KernelParameters Edge Cases", "[unit][kernel_parameters]")
         params.set_tolerance(1e-15);
         REQUIRE(params.get_tolerance() == Catch::Approx(1e-15));
     }
+
+    SECTION("set_gamma_auto method")
+    {
+        KernelParameters params;
+
+        // Set gamma to a specific value first
+        params.set_gamma(0.5);
+        REQUIRE(params.get_gamma() == Catch::Approx(0.5));
+        REQUIRE_FALSE(params.is_gamma_auto());
+
+        // Set it to auto
+        params.set_gamma_auto();
+        REQUIRE(params.get_gamma() == Catch::Approx(-1.0));
+        REQUIRE(params.is_gamma_auto());
+    }
 }

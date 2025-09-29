@@ -763,3 +763,22 @@ TEST_CASE("SVMClassifier Feature Importance", "[integration][svm_classifier][fea
         REQUIRE_THROWS_AS(svm.get_feature_importance(), std::runtime_error);
     }
 }
+
+TEST_CASE("SVMClassifier Unfitted State Queries", "[integration][svm_classifier][unfitted]")
+{
+    SECTION("get_classes returns empty vector when unfitted")
+    {
+        SVMClassifier svm;
+
+        auto classes = svm.get_classes();
+
+        REQUIRE(classes.empty());
+    }
+
+    SECTION("get_n_classes returns 0 when unfitted")
+    {
+        SVMClassifier svm;
+
+        REQUIRE(svm.get_n_classes() == 0);
+    }
+}
