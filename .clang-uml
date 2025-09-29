@@ -1,0 +1,31 @@
+compilation_database_dir: build_Debug
+output_directory: diagrams
+diagrams:
+  SVMClassifier:
+    type: class
+    glob:
+      - "src/**/*.cpp"
+      - "include/**/*.h"
+      
+    include:
+      # Only include entities from the following namespaces
+      namespaces:
+        - svm_classifier
+    exclude:
+      access:
+        - private
+    plantuml:
+      style:
+        # Apply this style to all classes in the diagram
+        class: "#aliceblue;line:blue;line.dotted;text:blue"
+        # Apply this style to all packages in the diagram
+        package: "#back:grey"
+        # Make all template instantiation relations point upwards and draw them
+        # as green and dotted lines
+        instantiation: "up[#green,dotted]"
+      cmd: "/usr/bin/plantuml -tsvg \"diagrams/{}.puml\""
+      before:
+        - 'title clang-uml class diagram model'
+    mermaid:
+      before:
+        - 'classDiagram'

@@ -10,8 +10,7 @@ Checks: '-*,
          -modernize-use-trailing-return-type,
          -bugprone-exception-escape'
 
-HeaderFilterRegex: 'src/*'
-AnalyzeTemporaryDtors: false
+HeaderFilterRegex: 'include/svm_classifier/*.hpp'
 WarningsAsErrors: ''
 FormatStyle: file
 ...

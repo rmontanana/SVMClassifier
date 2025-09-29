@@ -1,6 +1,7 @@
 # .clang-format
 ---
-BasedOnStyle: LLVM
+BasedOnStyle: Google
+AllowShortFunctionsOnASingleLine: Empty
 AccessModifierOffset: -4
 BreakBeforeBraces: Linux
 ColumnLimit: 0

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(CMAKE_PREFIX_PATH=./libtorch make build)",
+      "Bash(./build/tests/svm_classifier_tests:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
