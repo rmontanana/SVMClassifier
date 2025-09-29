@@ -31,7 +31,7 @@ A clear and concise description of what actually happened.
 - OS: [e.g. Ubuntu 20.04, macOS 12.0, Windows 10]
 - Compiler: [e.g. GCC 9.4.0, Clang 12.0.0, MSVC 2019]
 - CMake Version: [e.g. 3.20.0]
-- PyTorch Version: [e.g. 2.1.0]
+- PyTorch Version: [e.g. 2.8.0]
 
 **Library Versions:**
 - SVM Classifier Version: [e.g. 1.0.0]
