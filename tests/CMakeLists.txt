@@ -115,7 +115,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_custom_target(coverage
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
             COMMAND ${LCOV_EXECUTABLE} --capture --directory . --output-file coverage.info
-            COMMAND ${LCOV_EXECUTABLE} --remove coverage.info '/usr/*' '*/external/*' '*/tests/*' --output-file coverage_filtered.info
+            COMMAND ${LCOV_EXECUTABLE} --remove coverage.info '/usr/*' '*/_deps/*' '*/tests/*' --output-file coverage_filtered.info --ignore-errors unused
             COMMAND ${GENHTML_EXECUTABLE} coverage_filtered.info --output-directory coverage_html
             DEPENDS svm_classifier_tests
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

@@ -16,7 +16,10 @@
       "Bash(g++:*)",
       "Bash(valgrind:*)",
       "Bash(timeout 60 valgrind:*)",
-      "Bash(clang-format:*)"
+      "Bash(clang-format:*)",
+      "Bash(gh run list:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(xargs clang-format:*)"
     ],
     "deny": [],
     "ask": []
