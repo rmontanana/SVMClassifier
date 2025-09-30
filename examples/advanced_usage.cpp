@@ -1,10 +1,11 @@
+#include <iostream>
+
+#include <chrono>
+#include <iomanip>
+#include <nlohmann/json.hpp>
+#include <numeric>
 #include <svm_classifier/svm_classifier.hpp>
 #include <torch/torch.h>
-#include <iostream>
-#include <iomanip>
-#include <numeric>
-#include <chrono>
-#include <nlohmann/json.hpp>
 
 using namespace svm_classifier;
 using json = nlohmann::json;
@@ -12,11 +13,11 @@ using json = nlohmann::json;
 /**
  * @brief Generate a more realistic multi-class dataset with noise
  */
-std::pair<torch::Tensor, torch::Tensor> generate_realistic_dataset(int n_samples,
+std::pair<torch::Tensor, torch::Tensor> generate_realistic_dataset(
+    int n_samples,
     int n_features,
     int n_classes,
-    double noise_factor = 0.1)
-{
+    double noise_factor = 0.1) {
     torch::manual_seed(42);
 
     // Create class centers
@@ -53,8 +54,7 @@ std::pair<torch::Tensor, torch::Tensor> generate_realistic_dataset(int n_samples
 /**
  * @brief Normalize features to [0, 1] range
  */
-torch::Tensor normalize_features(const torch::Tensor& X)
-{
+torch::Tensor normalize_features(const torch::Tensor& X) {
     auto min_vals = std::get<0>(torch::min(X, 0));
     auto max_vals = std::get<0>(torch::max(X, 0));
     auto range = max_vals - min_vals;
@@ -68,8 +68,7 @@ torch::Tensor normalize_features(const torch::Tensor& X)
 /**
  * @brief Standardize features (zero mean, unit variance)
  */
-torch::Tensor standardize_features(const torch::Tensor& X)
-{
+torch::Tensor standardize_features(const torch::Tensor& X) {
     auto mean = X.mean(0);
     auto std = X.std(0);
 
@@ -82,8 +81,7 @@ torch::Tensor standardize_features(const torch::Tensor& X)
 /**
  * @brief Print detailed evaluation metrics
  */
-void print_evaluation_metrics(const EvaluationMetrics& metrics, const std::string& title)
-{
+void print_evaluation_metrics(const EvaluationMetrics& metrics, const std::string& title) {
     std::cout << "\n=== " << title << " ===" << std::endl;
     std::cout << std::fixed << std::setprecision(4);
     std::cout << "Accuracy:  " << metrics.accuracy * 100 << "%" << std::endl;
@@ -103,8 +101,7 @@ void print_evaluation_metrics(const EvaluationMetrics& metrics, const std::strin
 /**
  * @brief Demonstrate manual hyperparameter tuning
  */
-void demonstrate_hyperparameter_tuning()
-{
+void demonstrate_hyperparameter_tuning() {
     std::cout << "\n" << std::string(60, '=') << std::endl;
     std::cout << "HYPERPARAMETER COMPARISON EXAMPLE" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
@@ -118,47 +115,46 @@ void demonstrate_hyperparameter_tuning()
     auto X_test = X_full.slice(0, n_train);
     auto y_test = y_full.slice(0, n_train);
 
-    std::cout << "Dataset: " << X_train.size(0) << " train, " << X_test.size(0)
-              << " test samples, " << X_train.size(1) << " features" << std::endl;
+    std::cout << "Dataset: " << X_train.size(0) << " train, " << X_test.size(0) << " test samples, "
+              << X_train.size(1) << " features" << std::endl;
 
-    std::vector<double> c_values = {0.1, 1.0, 10.0, 100.0};
+    std::vector<double> c_values = { 0.1, 1.0, 10.0, 100.0 };
 
     std::cout << "\n--- Linear SVM C Parameter Comparison ---" << std::endl;
     std::cout << std::setw(10) << "C" << std::setw(15) << "Accuracy" << std::endl;
     std::cout << std::string(25, '-') << std::endl;
 
     for (double c : c_values) {
-        json config = {{"kernel", "linear"}, {"C", c}};
+        json config = { { "kernel", "linear" }, { "C", c } };
         SVMClassifier svm(config);
         svm.fit(X_train, y_train);
         double accuracy = svm.score(X_test, y_test);
 
-        std::cout << std::setw(10) << std::fixed << std::setprecision(1) << c
-                  << std::setw(15) << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
+        std::cout << std::setw(10) << std::fixed << std::setprecision(1) << c << std::setw(15)
+                  << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
     }
 
-    std::vector<double> gamma_values = {0.01, 0.1, 1.0};
+    std::vector<double> gamma_values = { 0.01, 0.1, 1.0 };
 
     std::cout << "\n--- RBF SVM Gamma Parameter Comparison (C=10.0) ---" << std::endl;
     std::cout << std::setw(10) << "Gamma" << std::setw(15) << "Accuracy" << std::endl;
     std::cout << std::string(25, '-') << std::endl;
 
     for (double gamma : gamma_values) {
-        json config = {{"kernel", "rbf"}, {"C", 10.0}, {"gamma", gamma}};
+        json config = { { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", gamma } };
         SVMClassifier svm(config);
         svm.fit(X_train, y_train);
         double accuracy = svm.score(X_test, y_test);
 
-        std::cout << std::setw(10) << std::fixed << std::setprecision(2) << gamma
-                  << std::setw(15) << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
+        std::cout << std::setw(10) << std::fixed << std::setprecision(2) << gamma << std::setw(15)
+                  << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
     }
 }
 
 /**
  * @brief Demonstrate model evaluation and validation
  */
-void demonstrate_model_evaluation()
-{
+void demonstrate_model_evaluation() {
     std::cout << "\n" << std::string(60, '=') << std::endl;
     std::cout << "MODEL EVALUATION AND VALIDATION EXAMPLE" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
@@ -184,20 +180,15 @@ void demonstrate_model_evaluation()
 
     // Configure different models for comparison
     std::vector<json> model_configs = {
-        {{"kernel", "linear"}, {"C", 1.0}, {"multiclass_strategy", "ovr"}},
-        {{"kernel", "linear"}, {"C", 1.0}, {"multiclass_strategy", "ovo"}},
-        {{"kernel", "rbf"}, {"C", 10.0}, {"gamma", 0.1}, {"multiclass_strategy", "ovr"}},
-        {{"kernel", "rbf"}, {"C", 10.0}, {"gamma", 0.1}, {"multiclass_strategy", "ovo"}},
-        {{"kernel", "polynomial"}, {"degree", 3}, {"C", 1.0}}
+        { { "kernel", "linear" }, { "C", 1.0 }, { "multiclass_strategy", "ovr" } },
+        { { "kernel", "linear" }, { "C", 1.0 }, { "multiclass_strategy", "ovo" } },
+        { { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovr" } },
+        { { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" } },
+        { { "kernel", "polynomial" }, { "degree", 3 }, { "C", 1.0 } }
     };
 
-    std::vector<std::string> model_names = {
-        "Linear (OvR)",
-        "Linear (OvO)",
-        "RBF (OvR)",
-        "RBF (OvO)",
-        "Polynomial"
-    };
+    std::vector<std::string> model_names = { "Linear (OvR)", "Linear (OvO)", "RBF (OvR)",
+                                             "RBF (OvO)", "Polynomial" };
 
     std::cout << "\n--- Training and Evaluating Models ---" << std::endl;
 
@@ -212,7 +203,8 @@ void demonstrate_model_evaluation()
         auto start_time = std::chrono::high_resolution_clock::now();
         auto training_metrics = svm.fit(X_train, y_train);
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto training_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        auto training_duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
         std::cout << "Training time: " << training_duration.count() << " ms" << std::endl;
 
@@ -226,15 +218,15 @@ void demonstrate_model_evaluation()
 
         // Prediction summary
         auto predictions = svm.predict(X_test);
-        std::cout << "\nPredictions completed for " << predictions.size(0) << " test samples" << std::endl;
+        std::cout << "\nPredictions completed for " << predictions.size(0) << " test samples"
+                  << std::endl;
     }
 }
 
 /**
  * @brief Demonstrate feature preprocessing effects
  */
-void demonstrate_preprocessing_effects()
-{
+void demonstrate_preprocessing_effects() {
     std::cout << "\n" << std::string(60, '=') << std::endl;
     std::cout << "FEATURE PREPROCESSING EFFECTS EXAMPLE" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
@@ -244,8 +236,8 @@ void demonstrate_preprocessing_effects()
 
     // Create features with different scales
     auto X_unscaled = X_base.clone();
-    X_unscaled.slice(1, 0, 3) *= 100.0;    // Features 0-2: large scale
-    X_unscaled.slice(1, 3, 6) *= 0.01;     // Features 3-5: small scale
+    X_unscaled.slice(1, 0, 3) *= 100.0; // Features 0-2: large scale
+    X_unscaled.slice(1, 3, 6) *= 0.01;  // Features 3-5: small scale
     // Features 6-9: original scale
 
     std::cout << "Original dataset statistics:" << std::endl;
@@ -256,12 +248,12 @@ void demonstrate_preprocessing_effects()
 
     // Test different preprocessing approaches
     std::vector<std::pair<std::string, torch::Tensor>> preprocessing_methods = {
-        {"No Preprocessing", X_unscaled},
-        {"Normalization [0,1]", normalize_features(X_unscaled)},
-        {"Standardization", standardize_features(X_unscaled)}
+        { "No Preprocessing", X_unscaled },
+        { "Normalization [0,1]", normalize_features(X_unscaled) },
+        { "Standardization", standardize_features(X_unscaled) }
     };
 
-    json config = { {"kernel", "rbf"}, {"C", 1.0}, {"gamma", 0.1} };
+    json config = { { "kernel", "rbf" }, { "C", 1.0 }, { "gamma", 0.1 } };
 
     // Split data for testing
     int n_train = 600;
@@ -275,17 +267,17 @@ void demonstrate_preprocessing_effects()
     for (const auto& [method_name, X_processed] : preprocessing_methods) {
         auto X_train_slice = X_processed.slice(0, 0, n_train);
         auto y_train_slice = y.slice(0, 0, n_train);
-        auto X_test_proc = (method_name == "No Preprocessing") ? X_test_slice :
-                           (method_name == "Normalization [0,1]") ? normalize_features(X_test_slice) :
-                           standardize_features(X_test_slice);
+        auto X_test_proc = (method_name == "No Preprocessing") ? X_test_slice
+                           : (method_name == "Normalization [0,1]")
+                               ? normalize_features(X_test_slice)
+                               : standardize_features(X_test_slice);
 
         SVMClassifier svm(config);
         svm.fit(X_train_slice, y_train_slice);
         double accuracy = svm.score(X_test_proc, y_test);
 
-        std::cout << std::setw(20) << method_name
-                  << std::setw(15) << std::fixed << std::setprecision(2)
-                  << (accuracy * 100.0) << "%" << std::endl;
+        std::cout << std::setw(20) << method_name << std::setw(15) << std::fixed
+                  << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
     }
 
     std::cout << "\nKey Insights:" << std::endl;
@@ -298,8 +290,7 @@ void demonstrate_preprocessing_effects()
 /**
  * @brief Demonstrate class imbalance handling
  */
-void demonstrate_class_imbalance()
-{
+void demonstrate_class_imbalance() {
     std::cout << "\n" << std::string(60, '=') << std::endl;
     std::cout << "CLASS IMBALANCE HANDLING EXAMPLE" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
@@ -312,7 +303,8 @@ void demonstrate_class_imbalance()
     auto y0 = torch::zeros({ 500 }, torch::kInt32);
 
     // Class 1: 100 samples (minority)
-    auto X1 = torch::randn({ 100, 8 }) + torch::tensor({ -1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0 });
+    auto X1 =
+        torch::randn({ 100, 8 }) + torch::tensor({ -1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0 });
     auto y1 = torch::ones({ 100 }, torch::kInt32);
 
     // Class 2: 50 samples (very minority)
@@ -338,18 +330,14 @@ void demonstrate_class_imbalance()
 
     // Test different strategies
     std::vector<json> strategies = {
-        {{"kernel", "linear"}, {"C", 1.0}, {"multiclass_strategy", "ovr"}},
-        {{"kernel", "linear"}, {"C", 10.0}, {"multiclass_strategy", "ovr"}},
-        {{"kernel", "rbf"}, {"C", 1.0}, {"gamma", 0.1}, {"multiclass_strategy", "ovr"}},
-        {{"kernel", "rbf"}, {"C", 10.0}, {"gamma", 0.1}, {"multiclass_strategy", "ovo"}}
+        { { "kernel", "linear" }, { "C", 1.0 }, { "multiclass_strategy", "ovr" } },
+        { { "kernel", "linear" }, { "C", 10.0 }, { "multiclass_strategy", "ovr" } },
+        { { "kernel", "rbf" }, { "C", 1.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovr" } },
+        { { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" } }
     };
 
-    std::vector<std::string> strategy_names = {
-        "Linear (C=1.0, OvR)",
-        "Linear (C=10.0, OvR)",
-        "RBF (C=1.0, OvR)",
-        "RBF (C=10.0, OvO)"
-    };
+    std::vector<std::string> strategy_names = { "Linear (C=1.0, OvR)", "Linear (C=10.0, OvR)",
+                                                "RBF (C=1.0, OvR)", "RBF (C=10.0, OvO)" };
 
     std::cout << "\n--- Strategy Comparison for Imbalanced Data ---" << std::endl;
 
@@ -372,20 +360,20 @@ void demonstrate_class_imbalance()
                 total += metrics.confusion_matrix[class_idx][j];
             }
             double class_recall = (total > 0) ? static_cast<double>(tp) / total : 0.0;
-            std::cout << "  Class " << class_idx << " recall: "
-                << std::fixed << std::setprecision(4) << class_recall * 100 << "%" << std::endl;
+            std::cout << "  Class " << class_idx << " recall: " << std::fixed
+                      << std::setprecision(4) << class_recall * 100 << "%" << std::endl;
         }
     }
 
     std::cout << "\nRecommendations for imbalanced data:" << std::endl;
     std::cout << "- Increase C parameter to give more weight to training errors" << std::endl;
     std::cout << "- Consider One-vs-One strategy for better minority class handling" << std::endl;
-    std::cout << "- Use class-specific evaluation metrics (precision, recall per class)" << std::endl;
+    std::cout << "- Use class-specific evaluation metrics (precision, recall per class)"
+              << std::endl;
     std::cout << "- Consider resampling techniques in preprocessing" << std::endl;
 }
 
-int main()
-{
+int main() {
     try {
         std::cout << "Advanced SVM Classifier Usage Examples" << std::endl;
         std::cout << std::string(60, '=') << std::endl;
@@ -405,15 +393,19 @@ int main()
 
         std::cout << "\nKey Takeaways:" << std::endl;
         std::cout << "1. Hyperparameter tuning is crucial for optimal performance" << std::endl;
-        std::cout << "2. Feature preprocessing significantly affects RBF and polynomial kernels" << std::endl;
+        std::cout << "2. Feature preprocessing significantly affects RBF and polynomial kernels"
+                  << std::endl;
         std::cout << "3. Cross-validation provides robust performance estimates" << std::endl;
-        std::cout << "4. Different kernels and strategies work better for different data types" << std::endl;
-        std::cout << "5. Class imbalance requires special consideration in model selection" << std::endl;
-        std::cout << "6. Linear kernels are fastest and work well for high-dimensional data" << std::endl;
-        std::cout << "7. RBF kernels provide good general-purpose non-linear classification" << std::endl;
+        std::cout << "4. Different kernels and strategies work better for different data types"
+                  << std::endl;
+        std::cout << "5. Class imbalance requires special consideration in model selection"
+                  << std::endl;
+        std::cout << "6. Linear kernels are fastest and work well for high-dimensional data"
+                  << std::endl;
+        std::cout << "7. RBF kernels provide good general-purpose non-linear classification"
+                  << std::endl;
 
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

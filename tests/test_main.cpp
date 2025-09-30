@@ -7,16 +7,16 @@
  */
 
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch_test_macros.hpp>
-#include <torch/torch.h>
 #include <iostream>
 
- /**
-  * @brief Global test setup
-  */
+#include <catch2/catch_test_macros.hpp>
+#include <torch/torch.h>
+
+/**
+ * @brief Global test setup
+ */
 struct GlobalTestSetup {
-    GlobalTestSetup()
-    {
+    GlobalTestSetup() {
         // Set PyTorch to single-threaded for reproducible tests
         torch::set_num_threads(1);
 
@@ -27,8 +27,7 @@ struct GlobalTestSetup {
         try {
             // Try FBGEMM first, fallback to default if not available
             torch::globalContext().setQEngine(at::QEngine::FBGEMM);
-        }
-        catch (const std::exception&) {
+        } catch (const std::exception&) {
             // Use default engine if FBGEMM is not available
             torch::globalContext().setQEngine(at::QEngine::NoQEngine);
         }

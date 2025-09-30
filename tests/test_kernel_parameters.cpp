@@ -3,20 +3,18 @@
  * @brief Unit tests for KernelParameters class
  */
 
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
-#include <svm_classifier/kernel_parameters.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
+#include <svm_classifier/kernel_parameters.hpp>
 
 using namespace svm_classifier;
 using json = nlohmann::json;
 
-TEST_CASE("KernelParameters Default Constructor", "[unit][kernel_parameters]")
-{
+TEST_CASE("KernelParameters Default Constructor", "[unit][kernel_parameters]") {
     KernelParameters params;
 
-    SECTION("Default values are set correctly")
-    {
+    SECTION("Default values are set correctly") {
         REQUIRE(params.get_kernel_type() == KernelType::LINEAR);
         REQUIRE(params.get_C() == Catch::Approx(1.0));
         REQUIRE(params.get_tolerance() == Catch::Approx(1e-3));
@@ -24,8 +22,7 @@ TEST_CASE("KernelParameters Default Constructor", "[unit][kernel_parameters]")
         REQUIRE(params.get_multiclass_strategy() == MulticlassStrategy::ONE_VS_REST);
     }
 
-    SECTION("Kernel-specific parameters have defaults")
-    {
+    SECTION("Kernel-specific parameters have defaults") {
         REQUIRE(params.get_gamma() == Catch::Approx(-1.0)); // Auto gamma
         REQUIRE(params.get_degree() == 3);
         REQUIRE(params.get_coef0() == Catch::Approx(0.0));
@@ -33,15 +30,10 @@ TEST_CASE("KernelParameters Default Constructor", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]")
-{
-    SECTION("Linear kernel configuration")
-    {
+TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]") {
+    SECTION("Linear kernel configuration") {
         json config = {
-            {"kernel", "linear"},
-            {"C", 10.0},
-            {"tolerance", 1e-4},
-            {"probability", true}
+            { "kernel", "linear" }, { "C", 10.0 }, { "tolerance", 1e-4 }, { "probability", true }
         };
 
         KernelParameters params(config);
@@ -52,13 +44,9 @@ TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]")
         REQUIRE(params.get_probability() == true);
     }
 
-    SECTION("RBF kernel configuration")
-    {
+    SECTION("RBF kernel configuration") {
         json config = {
-            {"kernel", "rbf"},
-            {"C", 1.0},
-            {"gamma", 0.1},
-            {"multiclass_strategy", "ovo"}
+            { "kernel", "rbf" }, { "C", 1.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" }
         };
 
         KernelParameters params(config);
@@ -69,15 +57,12 @@ TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]")
         REQUIRE(params.get_multiclass_strategy() == MulticlassStrategy::ONE_VS_ONE);
     }
 
-    SECTION("Polynomial kernel configuration")
-    {
-        json config = {
-            {"kernel", "polynomial"},
-            {"C", 5.0},
-            {"degree", 4},
-            {"gamma", 0.5},
-            {"coef0", 1.0}
-        };
+    SECTION("Polynomial kernel configuration") {
+        json config = { { "kernel", "polynomial" },
+                        { "C", 5.0 },
+                        { "degree", 4 },
+                        { "gamma", 0.5 },
+                        { "coef0", 1.0 } };
 
         KernelParameters params(config);
 
@@ -87,13 +72,8 @@ TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]")
         REQUIRE(params.get_coef0() == Catch::Approx(1.0));
     }
 
-    SECTION("Sigmoid kernel configuration")
-    {
-        json config = {
-            {"kernel", "sigmoid"},
-            {"gamma", 0.01},
-            {"coef0", -1.0}
-        };
+    SECTION("Sigmoid kernel configuration") {
+        json config = { { "kernel", "sigmoid" }, { "gamma", 0.01 }, { "coef0", -1.0 } };
 
         KernelParameters params(config);
 
@@ -103,12 +83,10 @@ TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]")
-{
+TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]") {
     KernelParameters params;
 
-    SECTION("Set and get C parameter")
-    {
+    SECTION("Set and get C parameter") {
         params.set_C(5.0);
         REQUIRE(params.get_C() == Catch::Approx(5.0));
 
@@ -117,8 +95,7 @@ TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]")
         REQUIRE_THROWS_AS(params.set_C(0.0), std::invalid_argument);
     }
 
-    SECTION("Set and get gamma parameter")
-    {
+    SECTION("Set and get gamma parameter") {
         params.set_gamma(0.25);
         REQUIRE(params.get_gamma() == Catch::Approx(0.25));
 
@@ -127,8 +104,7 @@ TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]")
         REQUIRE(params.get_gamma() == Catch::Approx(-1.0));
     }
 
-    SECTION("Set and get degree parameter")
-    {
+    SECTION("Set and get degree parameter") {
         params.set_degree(5);
         REQUIRE(params.get_degree() == 5);
 
@@ -137,8 +113,7 @@ TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]")
         REQUIRE_THROWS_AS(params.set_degree(-1), std::invalid_argument);
     }
 
-    SECTION("Set and get tolerance")
-    {
+    SECTION("Set and get tolerance") {
         params.set_tolerance(1e-6);
         REQUIRE(params.get_tolerance() == Catch::Approx(1e-6));
 
@@ -147,8 +122,7 @@ TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]")
         REQUIRE_THROWS_AS(params.set_tolerance(0.0), std::invalid_argument);
     }
 
-    SECTION("Set and get cache size")
-    {
+    SECTION("Set and get cache size") {
         params.set_cache_size(500.0);
         REQUIRE(params.get_cache_size() == Catch::Approx(500.0));
 
@@ -157,10 +131,8 @@ TEST_CASE("KernelParameters Setters and Getters", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]")
-{
-    SECTION("Valid linear kernel parameters")
-    {
+TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]") {
+    SECTION("Valid linear kernel parameters") {
         KernelParameters params;
         params.set_kernel_type(KernelType::LINEAR);
         params.set_C(1.0);
@@ -169,8 +141,7 @@ TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]")
         REQUIRE_NOTHROW(params.validate());
     }
 
-    SECTION("Valid RBF kernel parameters")
-    {
+    SECTION("Valid RBF kernel parameters") {
         KernelParameters params;
         params.set_kernel_type(KernelType::RBF);
         params.set_C(1.0);
@@ -179,8 +150,7 @@ TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]")
         REQUIRE_NOTHROW(params.validate());
     }
 
-    SECTION("Valid polynomial kernel parameters")
-    {
+    SECTION("Valid polynomial kernel parameters") {
         KernelParameters params;
         params.set_kernel_type(KernelType::POLYNOMIAL);
         params.set_C(1.0);
@@ -191,8 +161,7 @@ TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]")
         REQUIRE_NOTHROW(params.validate());
     }
 
-    SECTION("Invalid parameters throw exceptions")
-    {
+    SECTION("Invalid parameters throw exceptions") {
         KernelParameters params;
 
         // Invalid C - should throw during parameter setting
@@ -207,10 +176,8 @@ TEST_CASE("KernelParameters Validation", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters JSON Serialization", "[unit][kernel_parameters]")
-{
-    SECTION("Get parameters as JSON")
-    {
+TEST_CASE("KernelParameters JSON Serialization", "[unit][kernel_parameters]") {
+    SECTION("Get parameters as JSON") {
         KernelParameters params;
         params.set_kernel_type(KernelType::RBF);
         params.set_C(2.0);
@@ -225,17 +192,11 @@ TEST_CASE("KernelParameters JSON Serialization", "[unit][kernel_parameters]")
         REQUIRE(json_params["probability"] == true);
     }
 
-    SECTION("Round-trip JSON serialization")
-    {
+    SECTION("Round-trip JSON serialization") {
         json original_config = {
-            {"kernel", "polynomial"},
-            {"C", 3.0},
-            {"degree", 4},
-            {"gamma", 0.25},
-            {"coef0", 1.5},
-            {"multiclass_strategy", "ovo"},
-            {"probability", true},
-            {"tolerance", 1e-5}
+            { "kernel", "polynomial" }, { "C", 3.0 },         { "degree", 4 },
+            { "gamma", 0.25 },          { "coef0", 1.5 },     { "multiclass_strategy", "ovo" },
+            { "probability", true },    { "tolerance", 1e-5 }
         };
 
         KernelParameters params(original_config);
@@ -256,10 +217,8 @@ TEST_CASE("KernelParameters JSON Serialization", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters Default Parameters", "[unit][kernel_parameters]")
-{
-    SECTION("Linear kernel defaults")
-    {
+TEST_CASE("KernelParameters Default Parameters", "[unit][kernel_parameters]") {
+    SECTION("Linear kernel defaults") {
         auto defaults = KernelParameters::get_default_parameters(KernelType::LINEAR);
 
         REQUIRE(defaults["kernel"] == "linear");
@@ -268,8 +227,7 @@ TEST_CASE("KernelParameters Default Parameters", "[unit][kernel_parameters]")
         REQUIRE(defaults["probability"] == false);
     }
 
-    SECTION("RBF kernel defaults")
-    {
+    SECTION("RBF kernel defaults") {
         auto defaults = KernelParameters::get_default_parameters(KernelType::RBF);
 
         REQUIRE(defaults["kernel"] == "rbf");
@@ -277,8 +235,7 @@ TEST_CASE("KernelParameters Default Parameters", "[unit][kernel_parameters]")
         REQUIRE(defaults["cache_size"] == 200.0);
     }
 
-    SECTION("Polynomial kernel defaults")
-    {
+    SECTION("Polynomial kernel defaults") {
         auto defaults = KernelParameters::get_default_parameters(KernelType::POLYNOMIAL);
 
         REQUIRE(defaults["kernel"] == "polynomial");
@@ -286,8 +243,7 @@ TEST_CASE("KernelParameters Default Parameters", "[unit][kernel_parameters]")
         REQUIRE(defaults["coef0"] == 0.0);
     }
 
-    SECTION("Reset to defaults")
-    {
+    SECTION("Reset to defaults") {
         KernelParameters params;
 
         // Modify parameters
@@ -305,18 +261,15 @@ TEST_CASE("KernelParameters Default Parameters", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters Type Conversions", "[unit][kernel_parameters]")
-{
-    SECTION("Kernel type to string conversion")
-    {
+TEST_CASE("KernelParameters Type Conversions", "[unit][kernel_parameters]") {
+    SECTION("Kernel type to string conversion") {
         REQUIRE(kernel_type_to_string(KernelType::LINEAR) == "linear");
         REQUIRE(kernel_type_to_string(KernelType::RBF) == "rbf");
         REQUIRE(kernel_type_to_string(KernelType::POLYNOMIAL) == "polynomial");
         REQUIRE(kernel_type_to_string(KernelType::SIGMOID) == "sigmoid");
     }
 
-    SECTION("String to kernel type conversion")
-    {
+    SECTION("String to kernel type conversion") {
         REQUIRE(string_to_kernel_type("linear") == KernelType::LINEAR);
         REQUIRE(string_to_kernel_type("rbf") == KernelType::RBF);
         REQUIRE(string_to_kernel_type("polynomial") == KernelType::POLYNOMIAL);
@@ -326,8 +279,7 @@ TEST_CASE("KernelParameters Type Conversions", "[unit][kernel_parameters]")
         REQUIRE_THROWS_AS(string_to_kernel_type("invalid"), std::invalid_argument);
     }
 
-    SECTION("Multiclass strategy conversions")
-    {
+    SECTION("Multiclass strategy conversions") {
         REQUIRE(multiclass_strategy_to_string(MulticlassStrategy::ONE_VS_REST) == "ovr");
         REQUIRE(multiclass_strategy_to_string(MulticlassStrategy::ONE_VS_ONE) == "ovo");
 
@@ -339,8 +291,7 @@ TEST_CASE("KernelParameters Type Conversions", "[unit][kernel_parameters]")
         REQUIRE_THROWS_AS(string_to_multiclass_strategy("invalid"), std::invalid_argument);
     }
 
-    SECTION("SVM library selection")
-    {
+    SECTION("SVM library selection") {
         REQUIRE(get_svm_library(KernelType::LINEAR) == SVMLibrary::LIBLINEAR);
         REQUIRE(get_svm_library(KernelType::RBF) == SVMLibrary::LIBSVM);
         REQUIRE(get_svm_library(KernelType::POLYNOMIAL) == SVMLibrary::LIBSVM);
@@ -348,10 +299,8 @@ TEST_CASE("KernelParameters Type Conversions", "[unit][kernel_parameters]")
     }
 }
 
-TEST_CASE("KernelParameters Edge Cases", "[unit][kernel_parameters]")
-{
-    SECTION("Empty JSON configuration")
-    {
+TEST_CASE("KernelParameters Edge Cases", "[unit][kernel_parameters]") {
+    SECTION("Empty JSON configuration") {
         json empty_config = json::object();
 
         // Should use all defaults
@@ -362,22 +311,15 @@ TEST_CASE("KernelParameters Edge Cases", "[unit][kernel_parameters]")
         REQUIRE(params.get_C() == Catch::Approx(1.0));
     }
 
-    SECTION("Invalid JSON values")
-    {
-        json invalid_config = {
-            {"kernel", "invalid_kernel"},
-            {"C", -1.0}
-        };
+    SECTION("Invalid JSON values") {
+        json invalid_config = { { "kernel", "invalid_kernel" }, { "C", -1.0 } };
 
         REQUIRE_THROWS_AS(KernelParameters(invalid_config), std::invalid_argument);
     }
 
-    SECTION("Partial JSON configuration")
-    {
+    SECTION("Partial JSON configuration") {
         json partial_config = {
-            {"kernel", "rbf"},
-            {"C", 5.0}
-            // Missing gamma, should use default
+            { "kernel", "rbf" }, { "C", 5.0 } // Missing gamma, should use default
         };
 
         KernelParameters params(partial_config);
@@ -386,8 +328,7 @@ TEST_CASE("KernelParameters Edge Cases", "[unit][kernel_parameters]")
         REQUIRE(params.get_gamma() == Catch::Approx(-1.0)); // Default auto gamma
     }
 
-    SECTION("Maximum and minimum valid values")
-    {
+    SECTION("Maximum and minimum valid values") {
         KernelParameters params;
 
         // Very small but valid C
@@ -403,8 +344,7 @@ TEST_CASE("KernelParameters Edge Cases", "[unit][kernel_parameters]")
         REQUIRE(params.get_tolerance() == Catch::Approx(1e-15));
     }
 
-    SECTION("set_gamma_auto method")
-    {
+    SECTION("set_gamma_auto method") {
         KernelParameters params;
 
         // Set gamma to a specific value first

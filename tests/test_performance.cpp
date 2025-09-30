@@ -3,17 +3,19 @@
  * @brief Performance benchmarks for SVMClassifier
  */
 
+#include <iostream>
+
 #include <catch2/catch_all.hpp>
+#include <chrono>
+#include <iomanip>
 #include <svm_classifier/svm_classifier.hpp>
 #include <torch/torch.h>
-#include <chrono>
-#include <iostream>
-#include <iomanip>
 
 // Include the actual headers for complete struct definitions
-#include "svm.h"        // libsvm structures
-#include "linear.h"     // liblinear structures
 #include <nlohmann/json.hpp>
+
+#include "linear.h" // liblinear structures
+#include "svm.h"    // libsvm structures
 
 using namespace svm_classifier;
 using json = nlohmann::json;
@@ -21,11 +23,8 @@ using json = nlohmann::json;
 /**
  * @brief Generate large synthetic dataset for performance testing
  */
-std::pair<torch::Tensor, torch::Tensor> generate_large_dataset(int n_samples,
-    int n_features,
-    int n_classes = 2,
-    int seed = 42)
-{
+std::pair<torch::Tensor, torch::Tensor>
+generate_large_dataset(int n_samples, int n_features, int n_classes = 2, int seed = 42) {
     torch::manual_seed(seed);
 
     auto X = torch::randn({ n_samples, n_features });
@@ -46,18 +45,17 @@ std::pair<torch::Tensor, torch::Tensor> generate_large_dataset(int n_samples,
  */
 class Benchmark {
 public:
-    explicit Benchmark(const std::string& name) : name_(name)
-    {
+    explicit Benchmark(const std::string& name) : name_(name) {
         start_time_ = std::chrono::high_resolution_clock::now();
     }
 
-    ~Benchmark()
-    {
+    ~Benchmark() {
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time_);
+        auto duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time_);
 
-        std::cout << std::setw(40) << std::left << name_
-            << ": " << std::setw(8) << std::right << duration.count() << " ms" << std::endl;
+        std::cout << std::setw(40) << std::left << name_ << ": " << std::setw(8) << std::right
+                  << duration.count() << " ms" << std::endl;
     }
 
 private:
@@ -65,14 +63,12 @@ private:
     std::chrono::high_resolution_clock::time_point start_time_;
 };
 
-TEST_CASE("Performance Benchmarks - Training Speed", "[performance][training]")
-{
+TEST_CASE("Performance Benchmarks - Training Speed", "[performance][training]") {
     std::cout << "\n=== Training Performance Benchmarks ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
-    SECTION("Linear kernel performance")
-    {
+    SECTION("Linear kernel performance") {
         auto [X_small, y_small] = generate_large_dataset(1000, 20, 2);
         auto [X_medium, y_medium] = generate_large_dataset(5000, 50, 3);
         auto [X_large, y_large] = generate_large_dataset(10000, 100, 2);
@@ -96,8 +92,7 @@ TEST_CASE("Performance Benchmarks - Training Speed", "[performance][training]")
         }
     }
 
-    SECTION("RBF kernel performance")
-    {
+    SECTION("RBF kernel performance") {
         auto [X_small, y_small] = generate_large_dataset(500, 10, 2);
         auto [X_medium, y_medium] = generate_large_dataset(1000, 20, 2);
         auto [X_large, y_large] = generate_large_dataset(2000, 30, 2);
@@ -121,35 +116,32 @@ TEST_CASE("Performance Benchmarks - Training Speed", "[performance][training]")
         }
     }
 
-    SECTION("Polynomial kernel performance")
-    {
+    SECTION("Polynomial kernel performance") {
         auto [X_small, y_small] = generate_large_dataset(300, 8, 2);
         auto [X_medium, y_medium] = generate_large_dataset(800, 15, 2);
 
         {
             Benchmark bench("Poly SVM (deg=2) - 300 samples, 8 features");
-            json config = { {"kernel", "polynomial"}, {"degree", 2}, {"C", 1.0} };
+            json config = { { "kernel", "polynomial" }, { "degree", 2 }, { "C", 1.0 } };
             SVMClassifier svm(config);
             svm.fit(X_small, y_small);
         }
 
         {
             Benchmark bench("Poly SVM (deg=3) - 800 samples, 15 features");
-            json config = { {"kernel", "polynomial"}, {"degree", 3}, {"C", 1.0} };
+            json config = { { "kernel", "polynomial" }, { "degree", 3 }, { "C", 1.0 } };
             SVMClassifier svm(config);
             svm.fit(X_medium, y_medium);
         }
     }
 }
 
-TEST_CASE("Performance Benchmarks - Prediction Speed", "[performance][prediction]")
-{
+TEST_CASE("Performance Benchmarks - Prediction Speed", "[performance][prediction]") {
     std::cout << "\n=== Prediction Performance Benchmarks ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
-    SECTION("Linear kernel prediction")
-    {
+    SECTION("Linear kernel prediction") {
         auto [X_train, y_train] = generate_large_dataset(2000, 50, 3);
         auto [X_test_small, _] = generate_large_dataset(100, 50, 3, 123);
         auto [X_test_medium, _] = generate_large_dataset(1000, 50, 3, 124);
@@ -174,8 +166,7 @@ TEST_CASE("Performance Benchmarks - Prediction Speed", "[performance][prediction
         }
     }
 
-    SECTION("RBF kernel prediction")
-    {
+    SECTION("RBF kernel prediction") {
         auto [X_train, y_train] = generate_large_dataset(1000, 20, 2);
         auto [X_test_small, _] = generate_large_dataset(50, 20, 2, 123);
         auto [X_test_medium, _] = generate_large_dataset(500, 20, 2, 124);
@@ -201,26 +192,24 @@ TEST_CASE("Performance Benchmarks - Prediction Speed", "[performance][prediction
     }
 }
 
-TEST_CASE("Performance Benchmarks - Multiclass Strategies", "[performance][multiclass]")
-{
+TEST_CASE("Performance Benchmarks - Multiclass Strategies", "[performance][multiclass]") {
     std::cout << "\n=== Multiclass Strategy Performance ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
-    auto [X, y] = generate_large_dataset(2000, 30, 5);  // 5 classes
+    auto [X, y] = generate_large_dataset(2000, 30, 5); // 5 classes
 
-    SECTION("One-vs-Rest vs One-vs-One")
-    {
+    SECTION("One-vs-Rest vs One-vs-One") {
         {
             Benchmark bench("OvR Linear - 5 classes, 2K samples");
-            json config = { {"kernel", "linear"}, {"multiclass_strategy", "ovr"} };
+            json config = { { "kernel", "linear" }, { "multiclass_strategy", "ovr" } };
             SVMClassifier svm_ovr(config);
             svm_ovr.fit(X, y);
         }
 
         {
             Benchmark bench("OvO Linear - 5 classes, 2K samples");
-            json config = { {"kernel", "linear"}, {"multiclass_strategy", "ovo"} };
+            json config = { { "kernel", "linear" }, { "multiclass_strategy", "ovo" } };
             SVMClassifier svm_ovo(config);
             svm_ovo.fit(X, y);
         }
@@ -230,26 +219,24 @@ TEST_CASE("Performance Benchmarks - Multiclass Strategies", "[performance][multi
 
         {
             Benchmark bench("OvR RBF - 4 classes, 800 samples");
-            json config = { {"kernel", "rbf"}, {"multiclass_strategy", "ovr"} };
+            json config = { { "kernel", "rbf" }, { "multiclass_strategy", "ovr" } };
             SVMClassifier svm_ovr(config);
             svm_ovr.fit(X_rbf, y_rbf);
         }
 
         {
             Benchmark bench("OvO RBF - 4 classes, 800 samples");
-            json config = { {"kernel", "rbf"}, {"multiclass_strategy", "ovo"} };
+            json config = { { "kernel", "rbf" }, { "multiclass_strategy", "ovo" } };
             SVMClassifier svm_ovo(config);
             svm_ovo.fit(X_rbf, y_rbf);
         }
     }
 }
 
-TEST_CASE("Performance Benchmarks - Memory Usage", "[performance][memory]")
-{
+TEST_CASE("Performance Benchmarks - Memory Usage", "[performance][memory]") {
     std::cout << "\n=== Memory Usage Benchmarks ===" << std::endl;
 
-    SECTION("Large dataset handling")
-    {
+    SECTION("Large dataset handling") {
         // Test with progressively larger datasets
         std::vector<int> dataset_sizes = { 1000, 5000, 10000, 20000 };
 
@@ -268,8 +255,7 @@ TEST_CASE("Performance Benchmarks - Memory Usage", "[performance][memory]")
         }
     }
 
-    SECTION("High-dimensional data")
-    {
+    SECTION("High-dimensional data") {
         std::vector<int> feature_sizes = { 100, 500, 1000, 2000 };
 
         for (int n_features : feature_sizes) {
@@ -287,16 +273,14 @@ TEST_CASE("Performance Benchmarks - Memory Usage", "[performance][memory]")
     }
 }
 
-TEST_CASE("Performance Benchmarks - Cross-Validation", "[performance][cv]")
-{
+TEST_CASE("Performance Benchmarks - Cross-Validation", "[performance][cv]") {
     std::cout << "\n=== Cross-Validation Performance ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
     auto [X, y] = generate_large_dataset(2000, 25, 3);
 
-    SECTION("Different CV folds")
-    {
+    SECTION("Different CV folds") {
         SVMClassifier svm(KernelType::LINEAR, 1.0);
 
         {
@@ -319,21 +303,16 @@ TEST_CASE("Performance Benchmarks - Cross-Validation", "[performance][cv]")
     }
 }
 
-TEST_CASE("Performance Benchmarks - Grid Search", "[performance][grid_search]")
-{
+TEST_CASE("Performance Benchmarks - Grid Search", "[performance][grid_search]") {
     std::cout << "\n=== Grid Search Performance ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
-    auto [X, y] = generate_large_dataset(1000, 20, 2);  // Smaller dataset for grid search
+    auto [X, y] = generate_large_dataset(1000, 20, 2); // Smaller dataset for grid search
     SVMClassifier svm;
 
-    SECTION("Small parameter grid")
-    {
-        json param_grid = {
-            {"kernel", {"linear"}},
-            {"C", {0.1, 1.0, 10.0}}
-        };
+    SECTION("Small parameter grid") {
+        json param_grid = { { "kernel", { "linear" } }, { "C", { 0.1, 1.0, 10.0 } } };
 
         {
             Benchmark bench("Grid search - 3 parameters");
@@ -342,12 +321,8 @@ TEST_CASE("Performance Benchmarks - Grid Search", "[performance][grid_search]")
         }
     }
 
-    SECTION("Medium parameter grid")
-    {
-        json param_grid = {
-            {"kernel", {"linear", "rbf"}},
-            {"C", {0.1, 1.0, 10.0}}
-        };
+    SECTION("Medium parameter grid") {
+        json param_grid = { { "kernel", { "linear", "rbf" } }, { "C", { 0.1, 1.0, 10.0 } } };
 
         {
             Benchmark bench("Grid search - 6 parameters");
@@ -356,13 +331,10 @@ TEST_CASE("Performance Benchmarks - Grid Search", "[performance][grid_search]")
         }
     }
 
-    SECTION("Large parameter grid")
-    {
-        json param_grid = {
-            {"kernel", {"linear", "rbf"}},
-            {"C", {0.1, 1.0, 10.0, 100.0}},
-            {"gamma", {0.01, 0.1, 1.0}}
-        };
+    SECTION("Large parameter grid") {
+        json param_grid = { { "kernel", { "linear", "rbf" } },
+                            { "C", { 0.1, 1.0, 10.0, 100.0 } },
+                            { "gamma", { 0.01, 0.1, 1.0 } } };
 
         {
             Benchmark bench("Grid search - 24 parameters");
@@ -372,16 +344,14 @@ TEST_CASE("Performance Benchmarks - Grid Search", "[performance][grid_search]")
     }
 }
 
-TEST_CASE("Performance Benchmarks - Data Conversion", "[performance][data_conversion]")
-{
+TEST_CASE("Performance Benchmarks - Data Conversion", "[performance][data_conversion]") {
     std::cout << "\n=== Data Conversion Performance ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
     DataConverter converter;
 
-    SECTION("Tensor to SVM format conversion")
-    {
+    SECTION("Tensor to SVM format conversion") {
         auto [X_small, y_small] = generate_large_dataset(1000, 50, 2);
         auto [X_medium, y_medium] = generate_large_dataset(5000, 100, 2);
         auto [X_large, y_large] = generate_large_dataset(10000, 200, 2);
@@ -405,8 +375,7 @@ TEST_CASE("Performance Benchmarks - Data Conversion", "[performance][data_conver
         }
     }
 
-    SECTION("Tensor to Linear format conversion")
-    {
+    SECTION("Tensor to Linear format conversion") {
         auto [X_small, y_small] = generate_large_dataset(1000, 50, 2);
         auto [X_medium, y_medium] = generate_large_dataset(5000, 100, 2);
         auto [X_large, y_large] = generate_large_dataset(10000, 200, 2);
@@ -431,8 +400,7 @@ TEST_CASE("Performance Benchmarks - Data Conversion", "[performance][data_conver
     }
 }
 
-TEST_CASE("Performance Benchmarks - Probability Prediction", "[performance][probability]")
-{
+TEST_CASE("Performance Benchmarks - Probability Prediction", "[performance][probability]") {
     std::cout << "\n=== Probability Prediction Performance ===" << std::endl;
     std::cout << std::setw(40) << std::left << "Test Name" << "  " << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
@@ -440,9 +408,8 @@ TEST_CASE("Performance Benchmarks - Probability Prediction", "[performance][prob
     auto [X_train, y_train] = generate_large_dataset(1000, 20, 3);
     auto [X_test, _] = generate_large_dataset(500, 20, 3, 999);
 
-    SECTION("Linear kernel with probability")
-    {
-        json config = { {"kernel", "linear"}, {"probability", true} };
+    SECTION("Linear kernel with probability") {
+        json config = { { "kernel", "linear" }, { "probability", true } };
         SVMClassifier svm(config);
         svm.fit(X_train, y_train);
 
@@ -455,9 +422,8 @@ TEST_CASE("Performance Benchmarks - Probability Prediction", "[performance][prob
         }
     }
 
-    SECTION("RBF kernel with probability")
-    {
-        json config = { {"kernel", "rbf"}, {"probability", true} };
+    SECTION("RBF kernel with probability") {
+        json config = { { "kernel", "rbf" }, { "probability", true } };
         SVMClassifier svm(config);
         svm.fit(X_train, y_train);
 
@@ -471,8 +437,7 @@ TEST_CASE("Performance Benchmarks - Probability Prediction", "[performance][prob
     }
 }
 
-TEST_CASE("Performance Summary", "[performance][summary]")
-{
+TEST_CASE("Performance Summary", "[performance][summary]") {
     std::cout << "\n=== Performance Summary ===" << std::endl;
     std::cout << "All performance benchmarks completed successfully!" << std::endl;
     std::cout << "\nKey Observations:" << std::endl;

@@ -3,11 +3,11 @@
  * @brief Unit tests for multiclass strategy classes
  */
 
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
-#include <svm_classifier/multiclass_strategy.hpp>
-#include <svm_classifier/kernel_parameters.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <svm_classifier/data_converter.hpp>
+#include <svm_classifier/kernel_parameters.hpp>
+#include <svm_classifier/multiclass_strategy.hpp>
 #include <torch/torch.h>
 
 using namespace svm_classifier;
@@ -15,11 +15,8 @@ using namespace svm_classifier;
 /**
  * @brief Generate simple test data for multiclass testing
  */
-std::pair<torch::Tensor, torch::Tensor> generate_multiclass_data(int n_samples = 60,
-    int n_features = 2,
-    int n_classes = 3,
-    int seed = 42)
-{
+std::pair<torch::Tensor, torch::Tensor>
+generate_multiclass_data(int n_samples = 60, int n_features = 2, int n_classes = 3, int seed = 42) {
     torch::manual_seed(seed);
 
     auto X = torch::randn({ n_samples, n_features });
@@ -35,10 +32,8 @@ std::pair<torch::Tensor, torch::Tensor> generate_multiclass_data(int n_samples =
     return { X, y };
 }
 
-TEST_CASE("MulticlassStrategy Factory Function", "[unit][multiclass_strategy]")
-{
-    SECTION("Create One-vs-Rest strategy")
-    {
+TEST_CASE("MulticlassStrategy Factory Function", "[unit][multiclass_strategy]") {
+    SECTION("Create One-vs-Rest strategy") {
         auto strategy = create_multiclass_strategy(MulticlassStrategy::ONE_VS_REST);
 
         REQUIRE(strategy != nullptr);
@@ -47,8 +42,7 @@ TEST_CASE("MulticlassStrategy Factory Function", "[unit][multiclass_strategy]")
         REQUIRE(strategy->get_n_classes() == 0);
     }
 
-    SECTION("Create One-vs-One strategy")
-    {
+    SECTION("Create One-vs-One strategy") {
         auto strategy = create_multiclass_strategy(MulticlassStrategy::ONE_VS_ONE);
 
         REQUIRE(strategy != nullptr);
@@ -57,22 +51,19 @@ TEST_CASE("MulticlassStrategy Factory Function", "[unit][multiclass_strategy]")
     }
 }
 
-TEST_CASE("OneVsRestStrategy Basic Functionality", "[unit][multiclass_strategy]")
-{
+TEST_CASE("OneVsRestStrategy Basic Functionality", "[unit][multiclass_strategy]") {
     OneVsRestStrategy strategy;
     DataConverter converter;
     KernelParameters params;
 
-    SECTION("Initial state")
-    {
+    SECTION("Initial state") {
         REQUIRE(strategy.get_strategy_type() == MulticlassStrategy::ONE_VS_REST);
         REQUIRE(strategy.get_n_classes() == 0);
         REQUIRE(strategy.get_classes().empty());
         REQUIRE_FALSE(strategy.supports_probability());
     }
 
-    SECTION("Training with linear kernel")
-    {
+    SECTION("Training with linear kernel") {
         auto [X, y] = generate_multiclass_data(60, 3, 3);
 
         params.set_kernel_type(KernelType::LINEAR);
@@ -89,8 +80,7 @@ TEST_CASE("OneVsRestStrategy Basic Functionality", "[unit][multiclass_strategy]"
         REQUIRE(std::is_sorted(classes.begin(), classes.end()));
     }
 
-    SECTION("Training with RBF kernel")
-    {
+    SECTION("Training with RBF kernel") {
         auto [X, y] = generate_multiclass_data(50, 2, 2);
 
         params.set_kernel_type(KernelType::RBF);
@@ -104,8 +94,7 @@ TEST_CASE("OneVsRestStrategy Basic Functionality", "[unit][multiclass_strategy]"
     }
 }
 
-TEST_CASE("OneVsRestStrategy Prediction", "[unit][multiclass_strategy]")
-{
+TEST_CASE("OneVsRestStrategy Prediction", "[unit][multiclass_strategy]") {
     OneVsRestStrategy strategy;
     DataConverter converter;
     KernelParameters params;
@@ -121,8 +110,7 @@ TEST_CASE("OneVsRestStrategy Prediction", "[unit][multiclass_strategy]")
     params.set_kernel_type(KernelType::LINEAR);
     strategy.fit(X_train, y_train, params, converter);
 
-    SECTION("Basic prediction")
-    {
+    SECTION("Basic prediction") {
         auto predictions = strategy.predict(X_test, converter);
 
         REQUIRE(static_cast<int64_t>(predictions.size()) == X_test.size(0));
@@ -134,8 +122,7 @@ TEST_CASE("OneVsRestStrategy Prediction", "[unit][multiclass_strategy]")
         }
     }
 
-    SECTION("Decision function")
-    {
+    SECTION("Decision function") {
         auto decision_values = strategy.decision_function(X_test, converter);
 
         REQUIRE(static_cast<int64_t>(decision_values.size()) == X_test.size(0));
@@ -149,24 +136,21 @@ TEST_CASE("OneVsRestStrategy Prediction", "[unit][multiclass_strategy]")
         }
     }
 
-    SECTION("Prediction without training")
-    {
+    SECTION("Prediction without training") {
         OneVsRestStrategy untrained_strategy;
 
         REQUIRE_THROWS_AS(untrained_strategy.predict(X_test, converter), std::runtime_error);
     }
 }
 
-TEST_CASE("OneVsRestStrategy Probability Prediction", "[unit][multiclass_strategy]")
-{
+TEST_CASE("OneVsRestStrategy Probability Prediction", "[unit][multiclass_strategy]") {
     OneVsRestStrategy strategy;
     DataConverter converter;
     KernelParameters params;
 
     auto [X, y] = generate_multiclass_data(60, 2, 3);
 
-    SECTION("With probability enabled")
-    {
+    SECTION("With probability enabled") {
         params.set_kernel_type(KernelType::RBF);
         params.set_probability(true);
 
@@ -176,7 +160,7 @@ TEST_CASE("OneVsRestStrategy Probability Prediction", "[unit][multiclass_strateg
             auto probabilities = strategy.predict_proba(X, converter);
 
             REQUIRE(static_cast<int64_t>(probabilities.size()) == X.size(0));
-            REQUIRE(probabilities[0].size() == 3);  // 3 classes
+            REQUIRE(probabilities[0].size() == 3); // 3 classes
 
             // Check probability constraints
             for (const auto& sample_probs : probabilities) {
@@ -191,8 +175,7 @@ TEST_CASE("OneVsRestStrategy Probability Prediction", "[unit][multiclass_strateg
         }
     }
 
-    SECTION("Without probability enabled")
-    {
+    SECTION("Without probability enabled") {
         params.set_kernel_type(KernelType::LINEAR);
         params.set_probability(false);
 
@@ -206,22 +189,19 @@ TEST_CASE("OneVsRestStrategy Probability Prediction", "[unit][multiclass_strateg
     }
 }
 
-TEST_CASE("OneVsOneStrategy Basic Functionality", "[unit][multiclass_strategy]")
-{
+TEST_CASE("OneVsOneStrategy Basic Functionality", "[unit][multiclass_strategy]") {
     OneVsOneStrategy strategy;
     DataConverter converter;
     KernelParameters params;
 
-    SECTION("Initial state")
-    {
+    SECTION("Initial state") {
         REQUIRE(strategy.get_strategy_type() == MulticlassStrategy::ONE_VS_ONE);
         REQUIRE(strategy.get_n_classes() == 0);
         REQUIRE(strategy.get_classes().empty());
     }
 
-    SECTION("Training with multiple classes")
-    {
-        auto [X, y] = generate_multiclass_data(80, 3, 4);  // 4 classes for OvO
+    SECTION("Training with multiple classes") {
+        auto [X, y] = generate_multiclass_data(80, 3, 4); // 4 classes for OvO
 
         params.set_kernel_type(KernelType::LINEAR);
         params.set_C(1.0);
@@ -238,8 +218,7 @@ TEST_CASE("OneVsOneStrategy Basic Functionality", "[unit][multiclass_strategy]")
         // This is implementation detail but good to verify the concept
     }
 
-    SECTION("Binary classification")
-    {
+    SECTION("Binary classification") {
         auto [X, y] = generate_multiclass_data(50, 2, 2);
 
         params.set_kernel_type(KernelType::RBF);
@@ -252,8 +231,7 @@ TEST_CASE("OneVsOneStrategy Basic Functionality", "[unit][multiclass_strategy]")
     }
 }
 
-TEST_CASE("OneVsOneStrategy Prediction", "[unit][multiclass_strategy]")
-{
+TEST_CASE("OneVsOneStrategy Prediction", "[unit][multiclass_strategy]") {
     OneVsOneStrategy strategy;
     DataConverter converter;
     KernelParameters params;
@@ -267,8 +245,7 @@ TEST_CASE("OneVsOneStrategy Prediction", "[unit][multiclass_strategy]")
     params.set_kernel_type(KernelType::LINEAR);
     strategy.fit(X_train, y_train, params, converter);
 
-    SECTION("Basic prediction")
-    {
+    SECTION("Basic prediction") {
         auto predictions = strategy.predict(X_test, converter);
 
         REQUIRE(static_cast<int64_t>(predictions.size()) == X_test.size(0));
@@ -279,8 +256,7 @@ TEST_CASE("OneVsOneStrategy Prediction", "[unit][multiclass_strategy]")
         }
     }
 
-    SECTION("Decision function")
-    {
+    SECTION("Decision function") {
         auto decision_values = strategy.decision_function(X_test, converter);
 
         REQUIRE(static_cast<int64_t>(decision_values.size()) == X_test.size(0));
@@ -295,13 +271,12 @@ TEST_CASE("OneVsOneStrategy Prediction", "[unit][multiclass_strategy]")
         }
     }
 
-    SECTION("Probability prediction")
-    {
+    SECTION("Probability prediction") {
         // OvO probability estimation is more complex
         auto probabilities = strategy.predict_proba(X_test, converter);
 
         REQUIRE(static_cast<int64_t>(probabilities.size()) == X_test.size(0));
-        REQUIRE(probabilities[0].size() == 3);  // 3 classes
+        REQUIRE(probabilities[0].size() == 3); // 3 classes
 
         // Check basic probability constraints
         for (const auto& sample_probs : probabilities) {
@@ -317,8 +292,7 @@ TEST_CASE("OneVsOneStrategy Prediction", "[unit][multiclass_strategy]")
     }
 }
 
-TEST_CASE("MulticlassStrategy Comparison", "[integration][multiclass_strategy]")
-{
+TEST_CASE("MulticlassStrategy Comparison", "[integration][multiclass_strategy]") {
     auto [X, y] = generate_multiclass_data(100, 3, 3);
 
     auto X_train = X.slice(0, 0, 80);
@@ -331,8 +305,7 @@ TEST_CASE("MulticlassStrategy Comparison", "[integration][multiclass_strategy]")
     params.set_kernel_type(KernelType::LINEAR);
     params.set_C(1.0);
 
-    SECTION("Compare OvR vs OvO predictions")
-    {
+    SECTION("Compare OvR vs OvO predictions") {
         OneVsRestStrategy ovr_strategy;
         OneVsOneStrategy ovo_strategy;
 
@@ -348,16 +321,19 @@ TEST_CASE("MulticlassStrategy Comparison", "[integration][multiclass_strategy]")
         auto ovr_classes = ovr_strategy.get_classes();
         auto ovo_classes = ovo_strategy.get_classes();
 
-        REQUIRE(ovr_classes == ovo_classes);  // Should have same classes
+        REQUIRE(ovr_classes == ovo_classes); // Should have same classes
 
         for (size_t i = 0; i < ovr_predictions.size(); ++i) {
-            REQUIRE(std::find(ovr_classes.begin(), ovr_classes.end(), ovr_predictions[i]) != ovr_classes.end());
-            REQUIRE(std::find(ovo_classes.begin(), ovo_classes.end(), ovo_predictions[i]) != ovo_classes.end());
+            REQUIRE(
+                std::find(ovr_classes.begin(), ovr_classes.end(), ovr_predictions[i]) !=
+                ovr_classes.end());
+            REQUIRE(
+                std::find(ovo_classes.begin(), ovo_classes.end(), ovo_predictions[i]) !=
+                ovo_classes.end());
         }
     }
 
-    SECTION("Compare decision function outputs")
-    {
+    SECTION("Compare decision function outputs") {
         OneVsRestStrategy ovr_strategy;
         OneVsOneStrategy ovo_strategy;
 
@@ -377,16 +353,14 @@ TEST_CASE("MulticlassStrategy Comparison", "[integration][multiclass_strategy]")
     }
 }
 
-TEST_CASE("MulticlassStrategy Edge Cases", "[unit][multiclass_strategy]")
-{
+TEST_CASE("MulticlassStrategy Edge Cases", "[unit][multiclass_strategy]") {
     DataConverter converter;
     KernelParameters params;
     params.set_kernel_type(KernelType::LINEAR);
 
-    SECTION("Single class dataset")
-    {
+    SECTION("Single class dataset") {
         auto X = torch::randn({ 20, 2 });
-        auto y = torch::zeros({ 20 }, torch::kInt32);  // All same class
+        auto y = torch::zeros({ 20 }, torch::kInt32); // All same class
 
         OneVsRestStrategy strategy;
 
@@ -400,9 +374,8 @@ TEST_CASE("MulticlassStrategy Edge Cases", "[unit][multiclass_strategy]")
         REQUIRE(static_cast<int64_t>(predictions.size()) == X.size(0));
     }
 
-    SECTION("Very small dataset")
-    {
-        auto X = torch::tensor({ {1.0, 2.0}, {3.0, 4.0} });
+    SECTION("Very small dataset") {
+        auto X = torch::tensor({ { 1.0, 2.0 }, { 3.0, 4.0 } });
         auto y = torch::tensor({ 0, 1 });
 
         OneVsOneStrategy strategy;
@@ -415,8 +388,7 @@ TEST_CASE("MulticlassStrategy Edge Cases", "[unit][multiclass_strategy]")
         REQUIRE(predictions.size() == 2);
     }
 
-    SECTION("Imbalanced classes")
-    {
+    SECTION("Imbalanced classes") {
         // Create dataset with very imbalanced classes
         auto X1 = torch::randn({ 80, 2 });
         auto y1 = torch::zeros({ 80 }, torch::kInt32);
@@ -438,28 +410,26 @@ TEST_CASE("MulticlassStrategy Edge Cases", "[unit][multiclass_strategy]")
     }
 }
 
-TEST_CASE("MulticlassStrategy Error Handling", "[unit][multiclass_strategy]")
-{
+TEST_CASE("MulticlassStrategy Error Handling", "[unit][multiclass_strategy]") {
     DataConverter converter;
     KernelParameters params;
 
-    SECTION("Invalid parameters")
-    {
+    SECTION("Invalid parameters") {
         OneVsRestStrategy strategy;
         auto [X, y] = generate_multiclass_data(50, 2, 2);
 
         // Test that set_C validates parameters properly
         params.set_kernel_type(KernelType::LINEAR);
 
-        REQUIRE_THROWS_AS(params.set_C(-1.0), std::invalid_argument);  // Should throw during parameter setting
+        REQUIRE_THROWS_AS(
+            params.set_C(-1.0), std::invalid_argument); // Should throw during parameter setting
     }
 
-    SECTION("Mismatched tensor dimensions")
-    {
+    SECTION("Mismatched tensor dimensions") {
         OneVsOneStrategy strategy;
 
         auto X = torch::randn({ 50, 3 });
-        auto y = torch::randint(0, 2, { 40 });  // Wrong number of labels
+        auto y = torch::randint(0, 2, { 40 }); // Wrong number of labels
 
         params.set_kernel_type(KernelType::LINEAR);
         params.set_C(1.0);
@@ -467,8 +437,7 @@ TEST_CASE("MulticlassStrategy Error Handling", "[unit][multiclass_strategy]")
         REQUIRE_THROWS_AS(strategy.fit(X, y, params, converter), std::invalid_argument);
     }
 
-    SECTION("Prediction on untrained strategy")
-    {
+    SECTION("Prediction on untrained strategy") {
         OneVsRestStrategy strategy;
         auto X = torch::randn({ 10, 2 });
 
@@ -477,10 +446,8 @@ TEST_CASE("MulticlassStrategy Error Handling", "[unit][multiclass_strategy]")
     }
 }
 
-TEST_CASE("MulticlassStrategy Memory Management", "[unit][multiclass_strategy]")
-{
-    SECTION("Strategy destruction")
-    {
+TEST_CASE("MulticlassStrategy Memory Management", "[unit][multiclass_strategy]") {
+    SECTION("Strategy destruction") {
         // Test that strategies clean up properly
         auto strategy = create_multiclass_strategy(MulticlassStrategy::ONE_VS_REST);
 
@@ -496,8 +463,7 @@ TEST_CASE("MulticlassStrategy Memory Management", "[unit][multiclass_strategy]")
         // Strategy should clean up automatically when destroyed
     }
 
-    SECTION("Multiple training rounds")
-    {
+    SECTION("Multiple training rounds") {
         OneVsRestStrategy strategy;
         DataConverter converter;
         KernelParameters params;
@@ -505,7 +471,7 @@ TEST_CASE("MulticlassStrategy Memory Management", "[unit][multiclass_strategy]")
 
         // Train multiple times with different data
         for (int i = 0; i < 3; ++i) {
-            auto [X, y] = generate_multiclass_data(40, 2, 2, i);  // Different seed
+            auto [X, y] = generate_multiclass_data(40, 2, 2, i); // Different seed
 
             auto metrics = strategy.fit(X, y, params, converter);
             REQUIRE(metrics.status == TrainingStatus::SUCCESS);
@@ -515,8 +481,7 @@ TEST_CASE("MulticlassStrategy Memory Management", "[unit][multiclass_strategy]")
         }
     }
 
-    SECTION("OneVsOneStrategy supports_probability check")
-    {
+    SECTION("OneVsOneStrategy supports_probability check") {
         OneVsOneStrategy strategy;
         DataConverter converter;
         auto [X, y] = generate_multiclass_data(40, 2, 3);

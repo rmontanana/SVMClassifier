@@ -3,13 +3,13 @@
  * @brief Integration tests for SVMClassifier class
  */
 
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <cstdio>
+#include <fstream>
+#include <nlohmann/json.hpp>
 #include <svm_classifier/svm_classifier.hpp>
 #include <torch/torch.h>
-#include <nlohmann/json.hpp>
-#include <fstream>
-#include <cstdio>
 
 using namespace svm_classifier;
 using json = nlohmann::json;
@@ -17,11 +17,8 @@ using json = nlohmann::json;
 /**
  * @brief Generate synthetic classification dataset
  */
-std::pair<torch::Tensor, torch::Tensor> generate_test_data(int n_samples = 100,
-    int n_features = 4,
-    int n_classes = 3,
-    int seed = 42)
-{
+std::pair<torch::Tensor, torch::Tensor>
+generate_test_data(int n_samples = 100, int n_features = 4, int n_classes = 3, int seed = 42) {
     torch::manual_seed(seed);
 
     auto X = torch::randn({ n_samples, n_features });
@@ -37,10 +34,8 @@ std::pair<torch::Tensor, torch::Tensor> generate_test_data(int n_samples = 100,
     return { X, y };
 }
 
-TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]")
-{
-    SECTION("Default constructor")
-    {
+TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]") {
+    SECTION("Default constructor") {
         SVMClassifier svm;
 
         REQUIRE(svm.get_kernel_type() == KernelType::LINEAR);
@@ -50,8 +45,7 @@ TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]")
         REQUIRE(svm.get_multiclass_strategy() == MulticlassStrategy::ONE_VS_REST);
     }
 
-    SECTION("Constructor with parameters")
-    {
+    SECTION("Constructor with parameters") {
         SVMClassifier svm(KernelType::RBF, 10.0, MulticlassStrategy::ONE_VS_ONE);
 
         REQUIRE(svm.get_kernel_type() == KernelType::RBF);
@@ -59,14 +53,11 @@ TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]")
         REQUIRE_FALSE(svm.is_fitted());
     }
 
-    SECTION("JSON constructor")
-    {
-        json config = {
-            {"kernel", "polynomial"},
-            {"C", 5.0},
-            {"degree", 4},
-            {"multiclass_strategy", "ovo"}
-        };
+    SECTION("JSON constructor") {
+        json config = { { "kernel", "polynomial" },
+                        { "C", 5.0 },
+                        { "degree", 4 },
+                        { "multiclass_strategy", "ovo" } };
 
         SVMClassifier svm(config);
 
@@ -75,17 +66,12 @@ TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Parameter Management", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Parameter Management", "[integration][svm_classifier]") {
     SVMClassifier svm;
 
-    SECTION("Set and get parameters")
-    {
+    SECTION("Set and get parameters") {
         json new_params = {
-            {"kernel", "rbf"},
-            {"C", 2.0},
-            {"gamma", 0.1},
-            {"probability", true}
+            { "kernel", "rbf" }, { "C", 2.0 }, { "gamma", 0.1 }, { "probability", true }
         };
 
         svm.set_parameters(new_params);
@@ -97,42 +83,34 @@ TEST_CASE("SVMClassifier Parameter Management", "[integration][svm_classifier]")
         REQUIRE(current_params["probability"] == true);
     }
 
-    SECTION("Invalid parameters")
-    {
-        json invalid_params = {
-            {"kernel", "invalid_kernel"}
-        };
+    SECTION("Invalid parameters") {
+        json invalid_params = { { "kernel", "invalid_kernel" } };
 
         REQUIRE_THROWS_AS(svm.set_parameters(invalid_params), std::invalid_argument);
 
-        json invalid_C = {
-            {"C", -1.0}
-        };
+        json invalid_C = { { "C", -1.0 } };
 
         REQUIRE_THROWS_AS(svm.set_parameters(invalid_C), std::invalid_argument);
     }
 
-    SECTION("Parameter changes reset fitted state")
-    {
+    SECTION("Parameter changes reset fitted state") {
         auto [X, y] = generate_test_data(50, 3, 2);
 
         svm.fit(X, y);
         REQUIRE(svm.is_fitted());
 
-        json new_params = { {"kernel", "rbf"} };
+        json new_params = { { "kernel", "rbf" } };
         svm.set_parameters(new_params);
 
         REQUIRE_FALSE(svm.is_fitted());
     }
 }
 
-TEST_CASE("SVMClassifier Linear Kernel Training", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Linear Kernel Training", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::LINEAR, 1.0);
     auto [X, y] = generate_test_data(100, 4, 3);
 
-    SECTION("Basic training")
-    {
+    SECTION("Basic training") {
         auto metrics = svm.fit(X, y);
 
         REQUIRE(svm.is_fitted());
@@ -143,12 +121,8 @@ TEST_CASE("SVMClassifier Linear Kernel Training", "[integration][svm_classifier]
         REQUIRE(metrics.training_time >= 0.0);
     }
 
-    SECTION("Training with probability")
-    {
-        json config = {
-            {"kernel", "linear"},
-            {"probability", true}
-        };
+    SECTION("Training with probability") {
+        json config = { { "kernel", "linear" }, { "probability", true } };
 
         svm.set_parameters(config);
         auto metrics = svm.fit(X, y);
@@ -157,8 +131,7 @@ TEST_CASE("SVMClassifier Linear Kernel Training", "[integration][svm_classifier]
         REQUIRE(svm.supports_probability());
     }
 
-    SECTION("Binary classification")
-    {
+    SECTION("Binary classification") {
         auto [X_binary, y_binary] = generate_test_data(50, 3, 2);
 
         auto metrics = svm.fit(X_binary, y_binary);
@@ -168,13 +141,11 @@ TEST_CASE("SVMClassifier Linear Kernel Training", "[integration][svm_classifier]
     }
 }
 
-TEST_CASE("SVMClassifier RBF Kernel Training", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier RBF Kernel Training", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::RBF, 1.0);
     auto [X, y] = generate_test_data(80, 3, 2);
 
-    SECTION("Basic RBF training")
-    {
+    SECTION("Basic RBF training") {
         auto metrics = svm.fit(X, y);
 
         REQUIRE(svm.is_fitted());
@@ -182,12 +153,8 @@ TEST_CASE("SVMClassifier RBF Kernel Training", "[integration][svm_classifier]")
         REQUIRE(metrics.status == TrainingStatus::SUCCESS);
     }
 
-    SECTION("RBF with custom gamma")
-    {
-        json config = {
-            {"kernel", "rbf"},
-            {"gamma", 0.5}
-        };
+    SECTION("RBF with custom gamma") {
+        json config = { { "kernel", "rbf" }, { "gamma", 0.5 } };
 
         svm.set_parameters(config);
         auto metrics = svm.fit(X, y);
@@ -195,12 +162,8 @@ TEST_CASE("SVMClassifier RBF Kernel Training", "[integration][svm_classifier]")
         REQUIRE(svm.is_fitted());
     }
 
-    SECTION("RBF with auto gamma")
-    {
-        json config = {
-            {"kernel", "rbf"},
-            {"gamma", "auto"}
-        };
+    SECTION("RBF with auto gamma") {
+        json config = { { "kernel", "rbf" }, { "gamma", "auto" } };
 
         svm.set_parameters(config);
         auto metrics = svm.fit(X, y);
@@ -209,18 +172,13 @@ TEST_CASE("SVMClassifier RBF Kernel Training", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Polynomial Kernel Training", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Polynomial Kernel Training", "[integration][svm_classifier]") {
     SVMClassifier svm;
     auto [X, y] = generate_test_data(60, 2, 2);
 
-    SECTION("Polynomial kernel")
-    {
+    SECTION("Polynomial kernel") {
         json config = {
-            {"kernel", "polynomial"},
-            {"degree", 3},
-            {"gamma", 0.1},
-            {"coef0", 1.0}
+            { "kernel", "polynomial" }, { "degree", 3 }, { "gamma", 0.1 }, { "coef0", 1.0 }
         };
 
         svm.set_parameters(config);
@@ -231,13 +189,9 @@ TEST_CASE("SVMClassifier Polynomial Kernel Training", "[integration][svm_classif
         REQUIRE(svm.get_svm_library() == SVMLibrary::LIBSVM);
     }
 
-    SECTION("Different degrees")
-    {
-        for (int degree : {2, 4, 5}) {
-            json config = {
-                {"kernel", "polynomial"},
-                {"degree", degree}
-            };
+    SECTION("Different degrees") {
+        for (int degree : { 2, 4, 5 }) {
+            json config = { { "kernel", "polynomial" }, { "degree", degree } };
 
             SVMClassifier poly_svm(config);
             REQUIRE_NOTHROW(poly_svm.fit(X, y));
@@ -246,16 +200,11 @@ TEST_CASE("SVMClassifier Polynomial Kernel Training", "[integration][svm_classif
     }
 }
 
-TEST_CASE("SVMClassifier Sigmoid Kernel Training", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Sigmoid Kernel Training", "[integration][svm_classifier]") {
     SVMClassifier svm;
     auto [X, y] = generate_test_data(50, 2, 2);
 
-    json config = {
-        {"kernel", "sigmoid"},
-        {"gamma", 0.01},
-        {"coef0", 0.5}
-    };
+    json config = { { "kernel", "sigmoid" }, { "gamma", 0.01 }, { "coef0", 0.5 } };
 
     svm.set_parameters(config);
     auto metrics = svm.fit(X, y);
@@ -265,8 +214,7 @@ TEST_CASE("SVMClassifier Sigmoid Kernel Training", "[integration][svm_classifier
     REQUIRE(svm.get_svm_library() == SVMLibrary::LIBSVM);
 }
 
-TEST_CASE("SVMClassifier Prediction", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Prediction", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::LINEAR);
     auto [X, y] = generate_test_data(100, 3, 3);
 
@@ -278,8 +226,7 @@ TEST_CASE("SVMClassifier Prediction", "[integration][svm_classifier]")
 
     svm.fit(X_train, y_train);
 
-    SECTION("Basic prediction")
-    {
+    SECTION("Basic prediction") {
         auto predictions = svm.predict(X_test);
 
         REQUIRE(predictions.dtype() == torch::kInt32);
@@ -294,18 +241,16 @@ TEST_CASE("SVMClassifier Prediction", "[integration][svm_classifier]")
         }
     }
 
-    SECTION("Prediction accuracy")
-    {
+    SECTION("Prediction accuracy") {
         double accuracy = svm.score(X_test, y_test);
 
         REQUIRE(accuracy >= 0.0);
         REQUIRE(accuracy <= 1.0);
         // For this synthetic dataset, we expect reasonable accuracy
-        REQUIRE(accuracy > 0.3);  // Very loose bound
+        REQUIRE(accuracy > 0.3); // Very loose bound
     }
 
-    SECTION("Prediction on training data")
-    {
+    SECTION("Prediction on training data") {
         auto train_predictions = svm.predict(X_train);
         double train_accuracy = svm.score(X_train, y_train);
 
@@ -314,27 +259,22 @@ TEST_CASE("SVMClassifier Prediction", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Probability Prediction", "[integration][svm_classifier]")
-{
-    json config = {
-        {"kernel", "rbf"},
-        {"probability", true}
-    };
+TEST_CASE("SVMClassifier Probability Prediction", "[integration][svm_classifier]") {
+    json config = { { "kernel", "rbf" }, { "probability", true } };
 
     SVMClassifier svm(config);
     auto [X, y] = generate_test_data(80, 3, 3);
 
     svm.fit(X, y);
 
-    SECTION("Probability predictions")
-    {
+    SECTION("Probability predictions") {
         REQUIRE(svm.supports_probability());
 
         auto probabilities = svm.predict_proba(X);
 
         REQUIRE(probabilities.dtype() == torch::kFloat64);
         REQUIRE(probabilities.size(0) == X.size(0));
-        REQUIRE(probabilities.size(1) == 3);  // 3 classes
+        REQUIRE(probabilities.size(1) == 3); // 3 classes
 
         // Check that probabilities sum to 1
         auto prob_sums = probabilities.sum(1);
@@ -346,15 +286,13 @@ TEST_CASE("SVMClassifier Probability Prediction", "[integration][svm_classifier]
         REQUIRE(torch::all(probabilities >= 0.0).item<bool>());
     }
 
-    SECTION("Probability without training")
-    {
+    SECTION("Probability without training") {
         SVMClassifier untrained_svm(config);
         REQUIRE_THROWS_AS(untrained_svm.predict_proba(X), std::runtime_error);
     }
 
-    SECTION("Probability not supported")
-    {
-        SVMClassifier no_prob_svm(KernelType::LINEAR);  // No probability
+    SECTION("Probability not supported") {
+        SVMClassifier no_prob_svm(KernelType::LINEAR); // No probability
         no_prob_svm.fit(X, y);
 
         REQUIRE_FALSE(no_prob_svm.supports_probability());
@@ -362,15 +300,13 @@ TEST_CASE("SVMClassifier Probability Prediction", "[integration][svm_classifier]
     }
 }
 
-TEST_CASE("SVMClassifier Decision Function", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Decision Function", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::RBF);
     auto [X, y] = generate_test_data(60, 2, 3);
 
     svm.fit(X, y);
 
-    SECTION("Decision function values")
-    {
+    SECTION("Decision function values") {
         auto decision_values = svm.decision_function(X);
 
         REQUIRE(decision_values.dtype() == torch::kFloat64);
@@ -379,8 +315,7 @@ TEST_CASE("SVMClassifier Decision Function", "[integration][svm_classifier]")
         REQUIRE(decision_values.size(1) > 0);
     }
 
-    SECTION("Decision function consistency with predictions")
-    {
+    SECTION("Decision function consistency with predictions") {
         auto predictions = svm.predict(X);
         auto decision_values = svm.decision_function(X);
 
@@ -394,16 +329,11 @@ TEST_CASE("SVMClassifier Decision Function", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Multiclass Strategies", "[integration][svm_classifier]")
-{
-    auto [X, y] = generate_test_data(80, 3, 4);  // 4 classes
+TEST_CASE("SVMClassifier Multiclass Strategies", "[integration][svm_classifier]") {
+    auto [X, y] = generate_test_data(80, 3, 4); // 4 classes
 
-    SECTION("One-vs-Rest strategy")
-    {
-        json config = {
-            {"kernel", "linear"},
-            {"multiclass_strategy", "ovr"}
-        };
+    SECTION("One-vs-Rest strategy") {
+        json config = { { "kernel", "linear" }, { "multiclass_strategy", "ovr" } };
 
         SVMClassifier svm_ovr(config);
         auto metrics = svm_ovr.fit(X, y);
@@ -416,12 +346,8 @@ TEST_CASE("SVMClassifier Multiclass Strategies", "[integration][svm_classifier]"
         REQUIRE(predictions.size(0) == X.size(0));
     }
 
-    SECTION("One-vs-One strategy")
-    {
-        json config = {
-            {"kernel", "rbf"},
-            {"multiclass_strategy", "ovo"}
-        };
+    SECTION("One-vs-One strategy") {
+        json config = { { "kernel", "rbf" }, { "multiclass_strategy", "ovo" } };
 
         SVMClassifier svm_ovo(config);
         auto metrics = svm_ovo.fit(X, y);
@@ -434,8 +360,7 @@ TEST_CASE("SVMClassifier Multiclass Strategies", "[integration][svm_classifier]"
         REQUIRE(predictions.size(0) == X.size(0));
     }
 
-    SECTION("Compare strategies")
-    {
+    SECTION("Compare strategies") {
         SVMClassifier svm_ovr(KernelType::LINEAR, 1.0, MulticlassStrategy::ONE_VS_REST);
         SVMClassifier svm_ovo(KernelType::LINEAR, 1.0, MulticlassStrategy::ONE_VS_ONE);
 
@@ -451,15 +376,13 @@ TEST_CASE("SVMClassifier Multiclass Strategies", "[integration][svm_classifier]"
     }
 }
 
-TEST_CASE("SVMClassifier Evaluation Metrics", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Evaluation Metrics", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::LINEAR);
     auto [X, y] = generate_test_data(100, 3, 3);
 
     svm.fit(X, y);
 
-    SECTION("Detailed evaluation")
-    {
+    SECTION("Detailed evaluation") {
         auto metrics = svm.evaluate(X, y);
 
         REQUIRE(metrics.accuracy >= 0.0);
@@ -472,20 +395,24 @@ TEST_CASE("SVMClassifier Evaluation Metrics", "[integration][svm_classifier]")
         REQUIRE(metrics.f1_score <= 1.0);
 
         // Check confusion matrix dimensions
-        REQUIRE(metrics.confusion_matrix.size() == 3);  // 3 classes
+        REQUIRE(metrics.confusion_matrix.size() == 3); // 3 classes
         for (const auto& row : metrics.confusion_matrix) {
             REQUIRE(row.size() == 3);
         }
     }
 
-    SECTION("Perfect predictions metrics")
-    {
+    SECTION("Perfect predictions metrics") {
         // Create a very simple binary classification problem first
         // This should definitely work with linear SVM
-        auto X_simple = torch::tensor({
-            {-1.0, -1.0}, {-1.1, -1.1}, {-0.9, -0.9},  // class 0 (negative)
-            {1.0, 1.0}, {1.1, 1.1}, {0.9, 0.9}          // class 1 (positive)
-        });
+        auto X_simple = torch::tensor(
+            {
+                { -1.0, -1.0 },
+                { -1.1, -1.1 },
+                { -0.9, -0.9 }, // class 0 (negative)
+                { 1.0, 1.0 },
+                { 1.1, 1.1 },
+                { 0.9, 0.9 } // class 1 (positive)
+            });
         auto y_simple = torch::tensor({ 0, 0, 0, 1, 1, 1 });
 
         SVMClassifier simple_svm(KernelType::LINEAR);
@@ -501,13 +428,11 @@ TEST_CASE("SVMClassifier Evaluation Metrics", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Cross-Validation", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Cross-Validation", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::LINEAR);
     auto [X, y] = generate_test_data(100, 3, 2);
 
-    SECTION("5-fold cross-validation")
-    {
+    SECTION("5-fold cross-validation") {
         auto cv_scores = svm.cross_validate(X, y, 5);
 
         REQUIRE(cv_scores.size() == 5);
@@ -523,14 +448,12 @@ TEST_CASE("SVMClassifier Cross-Validation", "[integration][svm_classifier]")
         REQUIRE(mean <= 1.0);
     }
 
-    SECTION("Invalid CV folds")
-    {
+    SECTION("Invalid CV folds") {
         REQUIRE_THROWS_AS(svm.cross_validate(X, y, 1), std::invalid_argument);
         REQUIRE_THROWS_AS(svm.cross_validate(X, y, 0), std::invalid_argument);
     }
 
-    SECTION("CV preserves original state")
-    {
+    SECTION("CV preserves original state") {
         // Fit the model first
         svm.fit(X, y);
         auto original_classes = svm.get_classes();
@@ -544,17 +467,12 @@ TEST_CASE("SVMClassifier Cross-Validation", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Grid Search", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Grid Search", "[integration][svm_classifier]") {
     SVMClassifier svm;
-    auto [X, y] = generate_test_data(60, 2, 2);  // Smaller dataset for faster testing
+    auto [X, y] = generate_test_data(60, 2, 2); // Smaller dataset for faster testing
 
-    SECTION("Simple grid search")
-    {
-        json param_grid = {
-            {"kernel", {"linear", "rbf"}},
-            {"C", {0.1, 1.0, 10.0}}
-        };
+    SECTION("Simple grid search") {
+        json param_grid = { { "kernel", { "linear", "rbf" } }, { "C", { 0.1, 1.0, 10.0 } } };
 
         auto results = svm.grid_search(X, y, param_grid, 3);
 
@@ -567,16 +485,13 @@ TEST_CASE("SVMClassifier Grid Search", "[integration][svm_classifier]")
         REQUIRE(best_score <= 1.0);
 
         auto cv_results = results["cv_results"].get<std::vector<double>>();
-        REQUIRE(cv_results.size() == 6);  // 2 kernels × 3 C values
+        REQUIRE(cv_results.size() == 6); // 2 kernels × 3 C values
     }
 
-    SECTION("RBF-specific grid search")
-    {
-        json param_grid = {
-            {"kernel", {"rbf"}},
-            {"C", {1.0, 10.0}},
-            {"gamma", {0.01, 0.1}}
-        };
+    SECTION("RBF-specific grid search") {
+        json param_grid = { { "kernel", { "rbf" } },
+                            { "C", { 1.0, 10.0 } },
+                            { "gamma", { 0.01, 0.1 } } };
 
         auto results = svm.grid_search(X, y, param_grid, 3);
 
@@ -587,12 +502,10 @@ TEST_CASE("SVMClassifier Grid Search", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Error Handling", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Error Handling", "[integration][svm_classifier]") {
     SVMClassifier svm;
 
-    SECTION("Prediction before training")
-    {
+    SECTION("Prediction before training") {
         auto X = torch::randn({ 5, 3 });
 
         REQUIRE_THROWS_AS(svm.predict(X), std::runtime_error);
@@ -600,27 +513,24 @@ TEST_CASE("SVMClassifier Error Handling", "[integration][svm_classifier]")
         REQUIRE_THROWS_AS(svm.decision_function(X), std::runtime_error);
     }
 
-    SECTION("Inconsistent feature dimensions")
-    {
+    SECTION("Inconsistent feature dimensions") {
         auto X_train = torch::randn({ 50, 3 });
         auto y_train = torch::randint(0, 2, { 50 });
-        auto X_test = torch::randn({ 10, 5 });  // Different number of features
+        auto X_test = torch::randn({ 10, 5 }); // Different number of features
 
         svm.fit(X_train, y_train);
 
         REQUIRE_THROWS_AS(svm.predict(X_test), std::invalid_argument);
     }
 
-    SECTION("Invalid training data")
-    {
-        auto X_invalid = torch::tensor({ {std::numeric_limits<float>::quiet_NaN(), 1.0f} });
+    SECTION("Invalid training data") {
+        auto X_invalid = torch::tensor({ { std::numeric_limits<float>::quiet_NaN(), 1.0f } });
         auto y_invalid = torch::tensor({ 0 });
 
         REQUIRE_THROWS_AS(svm.fit(X_invalid, y_invalid), std::invalid_argument);
     }
 
-    SECTION("Empty datasets")
-    {
+    SECTION("Empty datasets") {
         auto X_empty = torch::empty({ 0, 3 });
         auto y_empty = torch::empty({ 0 });
 
@@ -628,10 +538,8 @@ TEST_CASE("SVMClassifier Error Handling", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Move Semantics", "[integration][svm_classifier]")
-{
-    SECTION("Move constructor")
-    {
+TEST_CASE("SVMClassifier Move Semantics", "[integration][svm_classifier]") {
+    SECTION("Move constructor") {
         SVMClassifier svm1(KernelType::RBF, 2.0);
         auto [X, y] = generate_test_data(50, 2, 2);
         svm1.fit(X, y);
@@ -649,8 +557,7 @@ TEST_CASE("SVMClassifier Move Semantics", "[integration][svm_classifier]")
         REQUIRE_FALSE(svm1.is_fitted());
     }
 
-    SECTION("Move assignment")
-    {
+    SECTION("Move assignment") {
         SVMClassifier svm1(KernelType::POLYNOMIAL);
         SVMClassifier svm2(KernelType::LINEAR);
 
@@ -667,8 +574,7 @@ TEST_CASE("SVMClassifier Move Semantics", "[integration][svm_classifier]")
     }
 }
 
-TEST_CASE("SVMClassifier Reset Functionality", "[integration][svm_classifier]")
-{
+TEST_CASE("SVMClassifier Reset Functionality", "[integration][svm_classifier]") {
     SVMClassifier svm(KernelType::RBF);
     auto [X, y] = generate_test_data(50, 3, 2);
 
@@ -688,10 +594,8 @@ TEST_CASE("SVMClassifier Reset Functionality", "[integration][svm_classifier]")
     REQUIRE(svm.is_fitted());
 }
 
-TEST_CASE("SVMClassifier Model Persistence", "[integration][svm_classifier][persistence]")
-{
-    SECTION("Save and load model with parameters")
-    {
+TEST_CASE("SVMClassifier Model Persistence", "[integration][svm_classifier][persistence]") {
+    SECTION("Save and load model with parameters") {
         SVMClassifier svm(KernelType::LINEAR);
         auto [X, y] = generate_test_data(50, 4, 2);
 
@@ -711,20 +615,17 @@ TEST_CASE("SVMClassifier Model Persistence", "[integration][svm_classifier][pers
         std::remove(test_file.c_str());
     }
 
-    SECTION("Save model without fitting throws error")
-    {
+    SECTION("Save model without fitting throws error") {
         SVMClassifier svm;
         REQUIRE_THROWS_AS(svm.save_model("/tmp/test_model.json"), std::runtime_error);
     }
 
-    SECTION("Load model throws not implemented error")
-    {
+    SECTION("Load model throws not implemented error") {
         SVMClassifier svm;
         REQUIRE_THROWS_AS(svm.load_model("/tmp/nonexistent.json"), std::runtime_error);
     }
 
-    SECTION("Save model with invalid path throws error")
-    {
+    SECTION("Save model with invalid path throws error") {
         SVMClassifier svm(KernelType::LINEAR);
         auto [X, y] = generate_test_data(30, 3, 2);
         svm.fit(X, y);
@@ -733,10 +634,8 @@ TEST_CASE("SVMClassifier Model Persistence", "[integration][svm_classifier][pers
     }
 }
 
-TEST_CASE("SVMClassifier Feature Importance", "[integration][svm_classifier][feature_importance]")
-{
-    SECTION("Feature importance only available for linear kernels")
-    {
+TEST_CASE("SVMClassifier Feature Importance", "[integration][svm_classifier][feature_importance]") {
+    SECTION("Feature importance only available for linear kernels") {
         SVMClassifier svm(KernelType::RBF);
         auto [X, y] = generate_test_data(50, 4, 2);
 
@@ -745,15 +644,13 @@ TEST_CASE("SVMClassifier Feature Importance", "[integration][svm_classifier][fea
         REQUIRE_THROWS_AS(svm.get_feature_importance(), std::runtime_error);
     }
 
-    SECTION("Feature importance requires fitted model")
-    {
+    SECTION("Feature importance requires fitted model") {
         SVMClassifier svm(KernelType::LINEAR);
 
         REQUIRE_THROWS_AS(svm.get_feature_importance(), std::runtime_error);
     }
 
-    SECTION("Feature importance not yet implemented")
-    {
+    SECTION("Feature importance not yet implemented") {
         SVMClassifier svm(KernelType::LINEAR);
         auto [X, y] = generate_test_data(50, 4, 2);
 
@@ -764,10 +661,8 @@ TEST_CASE("SVMClassifier Feature Importance", "[integration][svm_classifier][fea
     }
 }
 
-TEST_CASE("SVMClassifier Unfitted State Queries", "[integration][svm_classifier][unfitted]")
-{
-    SECTION("get_classes returns empty vector when unfitted")
-    {
+TEST_CASE("SVMClassifier Unfitted State Queries", "[integration][svm_classifier][unfitted]") {
+    SECTION("get_classes returns empty vector when unfitted") {
         SVMClassifier svm;
 
         auto classes = svm.get_classes();
@@ -775,8 +670,7 @@ TEST_CASE("SVMClassifier Unfitted State Queries", "[integration][svm_classifier]
         REQUIRE(classes.empty());
     }
 
-    SECTION("get_n_classes returns 0 when unfitted")
-    {
+    SECTION("get_n_classes returns 0 when unfitted") {
         SVMClassifier svm;
 
         REQUIRE(svm.get_n_classes() == 0);

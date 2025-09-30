@@ -15,7 +15,8 @@
       "Bash(gdb:*)",
       "Bash(g++:*)",
       "Bash(valgrind:*)",
-      "Bash(timeout 60 valgrind:*)"
+      "Bash(timeout 60 valgrind:*)",
+      "Bash(clang-format:*)"
     ],
     "deny": [],
     "ask": []
