@@ -244,6 +244,12 @@ public:
      */
     void reset();
 
+    /**
+     * @brief Get the library version
+     * @return Version string in format "MAJOR.MINOR.PATCH"
+     */
+    static std::string version();
+
 private:
     KernelParameters params_;                                     ///< Model parameters
     std::unique_ptr<MulticlassStrategyBase> multiclass_strategy_; ///< Multiclass strategy

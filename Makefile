@@ -84,6 +84,12 @@ help:
 	@printf "  $(YELLOW)info$(NC)          - $(INFO) Show build configuration info\n"
 	@printf "  $(YELLOW)deps$(NC)          - $(INFO) Show project dependencies\n"
 	@printf "  $(YELLOW)clean-all$(NC)     - $(CLEAN) Clean everything including external deps\n\n"
+	@printf "$(BOLD)$(GREEN)$(ROCKET) Conan Packaging:$(NC)\n"
+	@printf "  $(YELLOW)conan-create$(NC)  - $(ROCKET) Create Conan package (auto-extracts version)\n"
+	@printf "  $(YELLOW)conan-export$(NC)  - $(GEAR) Export Conan recipe to local cache\n"
+	@printf "  $(YELLOW)conan-install$(NC) - $(GEAR) Install dependencies with Conan\n"
+	@printf "  $(YELLOW)conan-build$(NC)   - $(ROCKET) Build with Conan\n"
+	@printf "  $(YELLOW)conan-test$(NC)    - $(TEST) Test Conan package\n\n"
 	@printf "$(BOLD)$(PURPLE)$(GEAR) Configuration:$(NC)\n"
 	@printf "  $(CYAN)BUILD_TYPE$(NC)=$(GREEN)$(BUILD_TYPE)$(NC)\n"
 	@printf "  $(CYAN)CMAKE_PREFIX_PATH$(NC)=$(GREEN)$(CMAKE_PREFIX_PATH)$(NC)\n"
@@ -275,6 +281,39 @@ clean-all:
 	@rm -rf _deps
 	@printf "$(BOLD)$(GREEN)$(CHECK) All build artifacts cleaned!$(NC)\n"
 
+# Conan packaging targets
+.PHONY: conan-create
+conan-create:
+	@printf "$(BOLD)$(PURPLE)$(ROCKET) Creating Conan package...$(NC)\n"
+	@printf "$(BOLD)$(CYAN)$(INFO) Version will be extracted from CMakeLists.txt$(NC)\n"
+	@CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan create . --build=missing
+	@printf "$(BOLD)$(GREEN)$(CHECK) Conan package created successfully!$(NC)\n"
+
+.PHONY: conan-export
+conan-export:
+	@printf "$(BOLD)$(BLUE)$(GEAR) Exporting Conan recipe...$(NC)\n"
+	@conan export .
+	@printf "$(BOLD)$(GREEN)$(CHECK) Conan recipe exported successfully!$(NC)\n"
+
+.PHONY: conan-install
+conan-install:
+	@printf "$(BOLD)$(CYAN)$(GEAR) Installing dependencies with Conan...$(NC)\n"
+	@mkdir -p $(BUILD_DIR)
+	@cd $(BUILD_DIR) && CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan install .. --build=missing
+	@printf "$(BOLD)$(GREEN)$(CHECK) Conan dependencies installed!$(NC)\n"
+
+.PHONY: conan-build
+conan-build:
+	@printf "$(BOLD)$(YELLOW)$(ROCKET) Building with Conan...$(NC)\n"
+	@CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan build .
+	@printf "$(BOLD)$(GREEN)$(CHECK) Conan build completed!$(NC)\n"
+
+.PHONY: conan-test
+conan-test:
+	@printf "$(BOLD)$(GREEN)$(TEST) Testing Conan package...$(NC)\n"
+	@CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan test test_package/conanfile.py svmclassifier
+	@printf "$(BOLD)$(GREEN)$(CHECK) Conan package test passed!$(NC)\n"
+
 # Aliases for convenience
 .PHONY: configure
 configure: $(BUILD_DIR)/Makefile
@@ -293,3 +332,6 @@ memcheck: test-memcheck
 
 .PHONY: profile
 profile: test-profile
+
+.PHONY: package
+package: conan-create

@@ -1,4 +1,5 @@
 #include "svm_classifier/svm_classifier.hpp"
+#include "svm_classifier/config.h"
 
 #include <cmath>
 
@@ -494,6 +495,10 @@ std::vector<nlohmann::json> SVMClassifier::generate_param_combinations(const nlo
     generate_combinations(0, current_params);
 
     return combinations;
+}
+
+std::string SVMClassifier::version() {
+    return SVMCLASSIFIER_VERSION;
 }
 
 } // namespace svm_classifier

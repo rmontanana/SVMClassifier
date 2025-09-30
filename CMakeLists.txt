@@ -1,11 +1,18 @@
 cmake_minimum_required(VERSION 3.15)
-project(SVMClassifier 
-    VERSION 1.0.0 
+project(SVMClassifier
+    VERSION 1.0.0
     LANGUAGES C CXX
     DESCRIPTION "A C++ library for Support Vector Machine classification using PyTorch"
     HOMEPAGE_URL "https://gitea.rmontanana.es/rmontanana/SVMClassifier"
 )
 set(PROJECT_AUTHOR "Ricardo Montañana Gómez")
+
+# Configure version header file
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/svm_classifier/config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/svm_classifier/config.h"
+    @ONLY
+)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -149,6 +156,7 @@ target_link_libraries(svm_classifier
 target_include_directories(svm_classifier
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -274,6 +282,11 @@ install(TARGETS svm_classifier
 )
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Install generated config.h
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/svm_classifier/config.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/svm_classifier
+)
 
 # Create package configuration files
 include(CMakePackageConfigHelpers)

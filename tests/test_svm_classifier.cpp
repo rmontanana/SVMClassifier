@@ -34,6 +34,14 @@ generate_test_data(int n_samples = 100, int n_features = 4, int n_classes = 3, i
     return { X, y };
 }
 
+TEST_CASE("SVMClassifier Version", "[integration][svm_classifier]") {
+    SECTION("Version string") {
+        std::string version = SVMClassifier::version();
+        REQUIRE_FALSE(version.empty());
+        REQUIRE(version == "1.0.0");
+    }
+}
+
 TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]") {
     SECTION("Default constructor") {
         SVMClassifier svm;
