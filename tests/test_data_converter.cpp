@@ -182,9 +182,7 @@ TEST_CASE("DataConverter Result Conversion", "[unit][data_converter]") {
     }
 
     SECTION("Probabilities conversion") {
-        std::vector<std::vector<double>> probabilities = { { 0.7, 0.2, 0.1 },
-                                                           { 0.1, 0.8, 0.1 },
-                                                           { 0.3, 0.3, 0.4 } };
+        std::vector<std::vector<double>> probabilities = { { 0.7, 0.2, 0.1 }, { 0.1, 0.8, 0.1 }, { 0.3, 0.3, 0.4 } };
 
         auto tensor = converter.from_probabilities(probabilities);
 

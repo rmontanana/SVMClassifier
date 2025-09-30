@@ -1,93 +1,39 @@
 ---
-# Clang-Format configuration for SVMClassifier project
 BasedOnStyle: LLVM
-
-# Indentation
-IndentWidth: 4
-TabWidth: 4
-UseTab: Never
-ContinuationIndentWidth: 4
 AccessModifierOffset: -4
-ConstructorInitializerIndentWidth: 4
-
-# Line length
-ColumnLimit: 100
-
-# Braces - Keep opening brace on same line
-BreakBeforeBraces: Attach
-Cpp11BracedListStyle: false
-
-# Pointers and references
-PointerAlignment: Left
-ReferenceAlignment: Left
-DerivePointerAlignment: false
-
-# Spacing
-SpaceAfterCStyleCast: false
-SpaceAfterTemplateKeyword: true
-SpaceBeforeAssignmentOperators: true
-SpaceBeforeCpp11BracedList: true
-SpaceBeforeCtorInitializerColon: true
-SpaceBeforeInheritanceColon: true
-SpaceBeforeParens: ControlStatements
-SpaceBeforeRangeBasedForLoopColon: true
-SpaceInEmptyParentheses: false
-SpacesBeforeTrailingComments: 1
-SpacesInAngles: false
-SpacesInContainerLiterals: true
-SpacesInCStyleCastParentheses: false
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
-
-# Breaking
-AlwaysBreakAfterReturnType: None
-AlwaysBreakBeforeMultilineStrings: false
-AlwaysBreakTemplateDeclarations: Yes
-BreakBeforeBinaryOperators: None
-BreakBeforeTernaryOperators: true
-BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
-BreakStringLiterals: true
-PenaltyReturnTypeOnItsOwnLine: 200
-AllowAllParametersOfDeclarationOnNextLine: false
-BinPackParameters: false
-
-# Alignment
 AlignAfterOpenBracket: AlwaysBreak
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignEscapedNewlines: Right
-AlignOperands: Align
-AlignTrailingComments: true
-
-# Includes - Sort and group includes
-SortIncludes: CaseSensitive
+AlignConsecutiveDeclarations:
+  PadOperators: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: Empty
+BinPackParameters: false
+ColumnLimit: 120
+Cpp11BracedListStyle: false
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^".*\.hpp"'
-    Priority:        1
-  - Regex:           '^<(cmath|iostream|stdexcept)>'
-    Priority:        2
-  - Regex:           '^<.*>'
-    Priority:        3
-  - Regex:           '^"(linear|svm)\.h"'
-    Priority:        4
-  - Regex:           '.*'
-    Priority:        5
-
-# Other
-AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-AllowShortLambdasOnASingleLine: Empty
-BinPackArguments: true
-CompactNamespaces: false
-FixNamespaceComments: true
-KeepEmptyLinesAtTheStartOfBlocks: false
-MaxEmptyLinesToKeep: 1
-NamespaceIndentation: None
-ReflowComments: true
+  - Regex: ^".*\.hpp"
+    Priority: 1
+  - Regex: ^<(cmath|iostream|stdexcept)>
+    Priority: 2
+  - Regex: ^<.*>
+    Priority: 3
+  - Regex: ^"(linear|svm)\.h"
+    Priority: 4
+  - Regex: .*
+    Priority: 5
+IndentWidth: 4
+PenaltyReturnTypeOnItsOwnLine: 200
+PointerAlignment: Left
+ReferenceAlignment: Left
 SortUsingDeclarations: true
+SpaceBeforeCpp11BracedList: true
+SpacesInAngles: false
 Standard: c++17
+TabWidth: 4
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: Yes
+KeepEmptyLinesAtTheStartOfBlocks: false

@@ -33,11 +33,8 @@ public:
      * @param converter Data converter instance
      * @return Training metrics
      */
-    virtual TrainingMetrics fit(
-        const torch::Tensor& X,
-        const torch::Tensor& y,
-        const KernelParameters& params,
-        DataConverter& converter) = 0;
+    virtual TrainingMetrics
+    fit(const torch::Tensor& X, const torch::Tensor& y, const KernelParameters& params, DataConverter& converter) = 0;
 
     /**
      * @brief Predict class labels
@@ -53,9 +50,7 @@ public:
      * @param converter Data converter instance
      * @return Class probabilities for each sample
      */
-    virtual std::vector<std::vector<double>> predict_proba(
-        const torch::Tensor& X,
-        DataConverter& converter) = 0;
+    virtual std::vector<std::vector<double>> predict_proba(const torch::Tensor& X, DataConverter& converter) = 0;
 
     /**
      * @brief Get decision function values
@@ -63,9 +58,7 @@ public:
      * @param converter Data converter instance
      * @return Decision function values
      */
-    virtual std::vector<std::vector<double>> decision_function(
-        const torch::Tensor& X,
-        DataConverter& converter) = 0;
+    virtual std::vector<std::vector<double>> decision_function(const torch::Tensor& X, DataConverter& converter) = 0;
 
     /**
      * @brief Get unique class labels
@@ -119,12 +112,9 @@ public:
 
     std::vector<int> predict(const torch::Tensor& X, DataConverter& converter) override;
 
-    std::vector<std::vector<double>> predict_proba(const torch::Tensor& X, DataConverter& converter)
-        override;
+    std::vector<std::vector<double>> predict_proba(const torch::Tensor& X, DataConverter& converter) override;
 
-    std::vector<std::vector<double>> decision_function(
-        const torch::Tensor& X,
-        DataConverter& converter) override;
+    std::vector<std::vector<double>> decision_function(const torch::Tensor& X, DataConverter& converter) override;
 
     std::vector<int> get_classes() const override {
         return classes_;
@@ -179,10 +169,7 @@ private:
      * @param converter Data converter
      * @return Decision value
      */
-    double get_sample_decision_value(
-        const torch::Tensor& sample,
-        size_t model_idx,
-        DataConverter& converter) const;
+    double get_sample_decision_value(const torch::Tensor& sample, size_t model_idx, DataConverter& converter) const;
 
     /**
      * @brief Get probability estimate for a single sample
@@ -191,10 +178,7 @@ private:
      * @param converter Data converter
      * @return Probability of positive class
      */
-    double get_sample_probability(
-        const torch::Tensor& sample,
-        size_t model_idx,
-        DataConverter& converter) const;
+    double get_sample_probability(const torch::Tensor& sample, size_t model_idx, DataConverter& converter) const;
 
     /**
      * @brief Clean up all models
@@ -225,12 +209,9 @@ public:
 
     std::vector<int> predict(const torch::Tensor& X, DataConverter& converter) override;
 
-    std::vector<std::vector<double>> predict_proba(const torch::Tensor& X, DataConverter& converter)
-        override;
+    std::vector<std::vector<double>> predict_proba(const torch::Tensor& X, DataConverter& converter) override;
 
-    std::vector<std::vector<double>> decision_function(
-        const torch::Tensor& X,
-        DataConverter& converter) override;
+    std::vector<std::vector<double>> decision_function(const torch::Tensor& X, DataConverter& converter) override;
 
     std::vector<int> get_classes() const override {
         return classes_;

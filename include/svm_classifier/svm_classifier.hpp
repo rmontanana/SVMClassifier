@@ -229,11 +229,8 @@ public:
      * @param cv Number of cross-validation folds
      * @return JSON object with best parameters and score
      */
-    nlohmann::json grid_search(
-        const torch::Tensor& X,
-        const torch::Tensor& y,
-        const nlohmann::json& param_grid,
-        int cv = 5);
+    nlohmann::json
+    grid_search(const torch::Tensor& X, const torch::Tensor& y, const nlohmann::json& param_grid, int cv = 5);
 
     /**
      * @brief Get feature importance (for linear kernels only)
@@ -262,10 +259,7 @@ private:
      * @param y Target tensor (optional)
      * @param check_fitted Whether to check if model is fitted
      */
-    void validate_input(
-        const torch::Tensor& X,
-        const torch::Tensor& y = torch::Tensor(),
-        bool check_fitted = false);
+    void validate_input(const torch::Tensor& X, const torch::Tensor& y = torch::Tensor(), bool check_fitted = false);
 
     /**
      * @brief Initialize multiclass strategy based on current parameters

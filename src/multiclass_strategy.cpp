@@ -181,9 +181,7 @@ std::vector<int> OneVsRestStrategy::predict(const torch::Tensor& X, DataConverte
     return predictions;
 }
 
-std::vector<std::vector<double>> OneVsRestStrategy::predict_proba(
-    const torch::Tensor& X,
-    DataConverter& converter) {
+std::vector<std::vector<double>> OneVsRestStrategy::predict_proba(const torch::Tensor& X, DataConverter& converter) {
     if (!supports_probability()) {
         throw std::runtime_error("Probability prediction not supported for current configuration");
     }
@@ -195,8 +193,7 @@ std::vector<std::vector<double>> OneVsRestStrategy::predict_proba(
     std::vector<std::vector<double>> probabilities;
     probabilities.reserve(X.size(0));
 
-    size_t num_models =
-        library_type_ == SVMLibrary::LIBSVM ? svm_models_.size() : linear_models_.size();
+    size_t num_models = library_type_ == SVMLibrary::LIBSVM ? svm_models_.size() : linear_models_.size();
 
     for (int i = 0; i < X.size(0); ++i) {
         auto sample = X[i];
@@ -239,8 +236,7 @@ std::vector<std::vector<double>> OneVsRestStrategy::decision_function(
     std::vector<std::vector<double>> decision_values;
     decision_values.reserve(X.size(0));
 
-    size_t num_models =
-        library_type_ == SVMLibrary::LIBSVM ? svm_models_.size() : linear_models_.size();
+    size_t num_models = library_type_ == SVMLibrary::LIBSVM ? svm_models_.size() : linear_models_.size();
 
     for (int i = 0; i < X.size(0); ++i) {
         auto sample = X[i];
@@ -351,16 +347,14 @@ double OneVsRestStrategy::get_sample_decision_value(
     size_t model_idx,
     DataConverter& converter) const {
     if (library_type_ == SVMLibrary::LIBSVM && svm_models_[model_idx]) {
-        auto sample_node_vec = data_converters_.empty()
-                                   ? converter.to_svm_node(sample)
-                                   : data_converters_[model_idx]->to_svm_node(sample);
+        auto sample_node_vec =
+            data_converters_.empty() ? converter.to_svm_node(sample) : data_converters_[model_idx]->to_svm_node(sample);
         double decision_value;
         svm_predict_values(svm_models_[model_idx].get(), sample_node_vec.data(), &decision_value);
         return decision_value;
     } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[model_idx]) {
-        auto sample_node_vec = data_converters_.empty()
-                                   ? converter.to_feature_node(sample)
-                                   : data_converters_[model_idx]->to_feature_node(sample);
+        auto sample_node_vec = data_converters_.empty() ? converter.to_feature_node(sample)
+                                                        : data_converters_[model_idx]->to_feature_node(sample);
         double decision_value;
         predict_values(linear_models_[model_idx].get(), sample_node_vec.data(), &decision_value);
         return decision_value;
@@ -373,20 +367,16 @@ double OneVsRestStrategy::get_sample_probability(
     size_t model_idx,
     DataConverter& converter) const {
     if (library_type_ == SVMLibrary::LIBSVM && svm_models_[model_idx]) {
-        auto sample_node_vec = data_converters_.empty()
-                                   ? converter.to_svm_node(sample)
-                                   : data_converters_[model_idx]->to_svm_node(sample);
+        auto sample_node_vec =
+            data_converters_.empty() ? converter.to_svm_node(sample) : data_converters_[model_idx]->to_svm_node(sample);
         double prob_estimates[2];
-        svm_predict_probability(
-            svm_models_[model_idx].get(), sample_node_vec.data(), prob_estimates);
+        svm_predict_probability(svm_models_[model_idx].get(), sample_node_vec.data(), prob_estimates);
         return prob_estimates[0]; // Probability of positive class
     } else if (library_type_ == SVMLibrary::LIBLINEAR && linear_models_[model_idx]) {
-        auto sample_node_vec = data_converters_.empty()
-                                   ? converter.to_feature_node(sample)
-                                   : data_converters_[model_idx]->to_feature_node(sample);
+        auto sample_node_vec = data_converters_.empty() ? converter.to_feature_node(sample)
+                                                        : data_converters_[model_idx]->to_feature_node(sample);
         double prob_estimates[2];
-        predict_probability(
-            linear_models_[model_idx].get(), sample_node_vec.data(), prob_estimates);
+        predict_probability(linear_models_[model_idx].get(), sample_node_vec.data(), prob_estimates);
         return prob_estimates[0]; // Probability of positive class
     }
     return 0.0;
@@ -491,9 +481,7 @@ std::vector<int> OneVsOneStrategy::predict(const torch::Tensor& X, DataConverter
     return vote_predictions(decision_values);
 }
 
-std::vector<std::vector<double>> OneVsOneStrategy::predict_proba(
-    const torch::Tensor& X,
-    DataConverter& converter) {
+std::vector<std::vector<double>> OneVsOneStrategy::predict_proba(const torch::Tensor& X, DataConverter& converter) {
     // OvO probability estimation is more complex and typically done via
     // pairwise coupling (Hastie & Tibshirani, 1998)
     // For simplicity, we'll use decision function values and normalize
@@ -541,9 +529,7 @@ std::vector<std::vector<double>> OneVsOneStrategy::predict_proba(
     return probabilities;
 }
 
-std::vector<std::vector<double>> OneVsOneStrategy::decision_function(
-    const torch::Tensor& X,
-    DataConverter& converter) {
+std::vector<std::vector<double>> OneVsOneStrategy::decision_function(const torch::Tensor& X, DataConverter& converter) {
     if (!is_trained_) {
         throw std::runtime_error("Model is not trained");
     }
@@ -570,18 +556,14 @@ bool OneVsOneStrategy::supports_probability() const {
     return params_.get_probability();
 }
 
-std::pair<torch::Tensor, torch::Tensor> OneVsOneStrategy::extract_binary_data(
-    const torch::Tensor& X,
-    const torch::Tensor& y,
-    int class1,
-    int class2) {
+std::pair<torch::Tensor, torch::Tensor>
+OneVsOneStrategy::extract_binary_data(const torch::Tensor& X, const torch::Tensor& y, int class1, int class2) {
     auto mask = (y == class1) | (y == class2);
     auto filtered_X = X.index_select(0, torch::nonzero(mask).squeeze());
     auto filtered_y = y.index_select(0, torch::nonzero(mask).squeeze());
 
     // Convert to binary labels: class1 -> +1, class2 -> -1
-    auto binary_y = torch::where(
-        filtered_y == class1, torch::ones_like(filtered_y), torch::full_like(filtered_y, -1));
+    auto binary_y = torch::where(filtered_y == class1, torch::ones_like(filtered_y), torch::full_like(filtered_y, -1));
 
     return std::make_pair(filtered_X, binary_y);
 }
@@ -642,8 +624,7 @@ double OneVsOneStrategy::train_pairwise_classifier(
     return duration.count() / 1000.0;
 }
 
-double OneVsOneStrategy::get_sample_decision_value(const torch::Tensor& sample, size_t model_idx)
-    const {
+double OneVsOneStrategy::get_sample_decision_value(const torch::Tensor& sample, size_t model_idx) const {
     if (library_type_ == SVMLibrary::LIBSVM && svm_models_[model_idx]) {
         auto sample_node_vec = data_converters_[model_idx]->to_svm_node(sample);
         double decision_value;
@@ -658,8 +639,7 @@ double OneVsOneStrategy::get_sample_decision_value(const torch::Tensor& sample, 
     return 0.0;
 }
 
-std::vector<int> OneVsOneStrategy::vote_predictions(
-    const std::vector<std::vector<double>>& decisions) {
+std::vector<int> OneVsOneStrategy::vote_predictions(const std::vector<std::vector<double>>& decisions) {
     std::vector<int> predictions;
     predictions.reserve(decisions.size());
 

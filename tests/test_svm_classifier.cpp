@@ -54,10 +54,7 @@ TEST_CASE("SVMClassifier Construction", "[integration][svm_classifier]") {
     }
 
     SECTION("JSON constructor") {
-        json config = { { "kernel", "polynomial" },
-                        { "C", 5.0 },
-                        { "degree", 4 },
-                        { "multiclass_strategy", "ovo" } };
+        json config = { { "kernel", "polynomial" }, { "C", 5.0 }, { "degree", 4 }, { "multiclass_strategy", "ovo" } };
 
         SVMClassifier svm(config);
 
@@ -70,9 +67,7 @@ TEST_CASE("SVMClassifier Parameter Management", "[integration][svm_classifier]")
     SVMClassifier svm;
 
     SECTION("Set and get parameters") {
-        json new_params = {
-            { "kernel", "rbf" }, { "C", 2.0 }, { "gamma", 0.1 }, { "probability", true }
-        };
+        json new_params = { { "kernel", "rbf" }, { "C", 2.0 }, { "gamma", 0.1 }, { "probability", true } };
 
         svm.set_parameters(new_params);
         auto current_params = svm.get_parameters();
@@ -177,9 +172,7 @@ TEST_CASE("SVMClassifier Polynomial Kernel Training", "[integration][svm_classif
     auto [X, y] = generate_test_data(60, 2, 2);
 
     SECTION("Polynomial kernel") {
-        json config = {
-            { "kernel", "polynomial" }, { "degree", 3 }, { "gamma", 0.1 }, { "coef0", 1.0 }
-        };
+        json config = { { "kernel", "polynomial" }, { "degree", 3 }, { "gamma", 0.1 }, { "coef0", 1.0 } };
 
         svm.set_parameters(config);
         auto metrics = svm.fit(X, y);
@@ -489,9 +482,7 @@ TEST_CASE("SVMClassifier Grid Search", "[integration][svm_classifier]") {
     }
 
     SECTION("RBF-specific grid search") {
-        json param_grid = { { "kernel", { "rbf" } },
-                            { "C", { 1.0, 10.0 } },
-                            { "gamma", { 0.01, 0.1 } } };
+        json param_grid = { { "kernel", { "rbf" } }, { "C", { 1.0, 10.0 } }, { "gamma", { 0.01, 0.1 } } };
 
         auto results = svm.grid_search(X, y, param_grid, 3);
 

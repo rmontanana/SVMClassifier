@@ -37,13 +37,7 @@ enum class SVMLibrary {
 /**
  * @brief Training result status
  */
-enum class TrainingStatus {
-    SUCCESS,
-    INVALID_PARAMETERS,
-    INSUFFICIENT_DATA,
-    MEMORY_ERROR,
-    CONVERGENCE_ERROR
-};
+enum class TrainingStatus { SUCCESS, INVALID_PARAMETERS, INSUFFICIENT_DATA, MEMORY_ERROR, CONVERGENCE_ERROR };
 
 /**
  * @brief Prediction result structure

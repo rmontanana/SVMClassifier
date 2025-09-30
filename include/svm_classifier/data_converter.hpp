@@ -39,9 +39,7 @@ public:
      * @param y Target tensor of shape (n_samples,) - optional for prediction
      * @return Pointer to svm_problem structure
      */
-    std::unique_ptr<svm_problem> to_svm_problem(
-        const torch::Tensor& X,
-        const torch::Tensor& y = torch::Tensor());
+    std::unique_ptr<svm_problem> to_svm_problem(const torch::Tensor& X, const torch::Tensor& y = torch::Tensor());
 
     /**
      * @brief Convert PyTorch tensors to liblinear format
@@ -49,9 +47,7 @@ public:
      * @param y Target tensor of shape (n_samples,) - optional for prediction
      * @return Pointer to problem structure
      */
-    std::unique_ptr<problem> to_linear_problem(
-        const torch::Tensor& X,
-        const torch::Tensor& y = torch::Tensor());
+    std::unique_ptr<problem> to_linear_problem(const torch::Tensor& X, const torch::Tensor& y = torch::Tensor());
 
     /**
      * @brief Convert single sample to libsvm format
@@ -196,10 +192,7 @@ private:
      * @param expected_dims Expected number of dimensions
      * @param name Tensor name for error messages
      */
-    void validate_tensor_properties(
-        const torch::Tensor& tensor,
-        int expected_dims,
-        const std::string& name);
+    void validate_tensor_properties(const torch::Tensor& tensor, int expected_dims, const std::string& name);
 };
 
 } // namespace svm_classifier

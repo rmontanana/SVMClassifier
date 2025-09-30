@@ -10,9 +10,7 @@ using json = nlohmann::json;
 /**
  * @brief Generate synthetic 2D classification dataset
  */
-std::pair<torch::Tensor, torch::Tensor> generate_classification_data(
-    int n_samples,
-    int n_classes = 3) {
+std::pair<torch::Tensor, torch::Tensor> generate_classification_data(int n_samples, int n_classes = 3) {
     torch::manual_seed(42);
 
     auto X = torch::randn({ n_samples, 2 });
@@ -51,8 +49,7 @@ void basic_svm_example() {
     auto X_test = X.slice(0, n_train);
     auto y_test = y.slice(0, n_train);
 
-    std::cout << "Dataset: " << X_train.size(0) << " training, " << X_test.size(0)
-              << " test samples" << std::endl;
+    std::cout << "Dataset: " << X_train.size(0) << " training, " << X_test.size(0) << " test samples" << std::endl;
 
     // Create SVM classifier with default parameters
     SVMClassifier svm;
@@ -77,16 +74,14 @@ void kernel_comparison_example() {
     auto X_test = X.slice(0, n_train);
     auto y_test = y.slice(0, n_train);
 
-    std::vector<KernelType> kernels = { KernelType::LINEAR, KernelType::RBF,
-                                        KernelType::POLYNOMIAL };
+    std::vector<KernelType> kernels = { KernelType::LINEAR, KernelType::RBF, KernelType::POLYNOMIAL };
 
     for (auto kernel : kernels) {
         SVMClassifier svm(kernel, 1.0, MulticlassStrategy::ONE_VS_REST);
         svm.fit(X_train, y_train);
         double accuracy = svm.score(X_test, y_test);
 
-        std::cout << kernel_type_to_string(kernel) << " kernel: " << (accuracy * 100.0) << "%"
-                  << std::endl;
+        std::cout << kernel_type_to_string(kernel) << " kernel: " << (accuracy * 100.0) << "%" << std::endl;
     }
     std::cout << std::endl;
 }
@@ -97,9 +92,7 @@ void kernel_comparison_example() {
 void json_configuration_example() {
     std::cout << "=== JSON Configuration Example ===" << std::endl;
 
-    json config = {
-        { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" }
-    };
+    json config = { { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" } };
 
     std::cout << "Config: " << config.dump() << std::endl;
 

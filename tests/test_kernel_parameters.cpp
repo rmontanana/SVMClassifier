@@ -32,9 +32,7 @@ TEST_CASE("KernelParameters Default Constructor", "[unit][kernel_parameters]") {
 
 TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]") {
     SECTION("Linear kernel configuration") {
-        json config = {
-            { "kernel", "linear" }, { "C", 10.0 }, { "tolerance", 1e-4 }, { "probability", true }
-        };
+        json config = { { "kernel", "linear" }, { "C", 10.0 }, { "tolerance", 1e-4 }, { "probability", true } };
 
         KernelParameters params(config);
 
@@ -45,9 +43,7 @@ TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]") {
     }
 
     SECTION("RBF kernel configuration") {
-        json config = {
-            { "kernel", "rbf" }, { "C", 1.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" }
-        };
+        json config = { { "kernel", "rbf" }, { "C", 1.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" } };
 
         KernelParameters params(config);
 
@@ -58,11 +54,7 @@ TEST_CASE("KernelParameters JSON Constructor", "[unit][kernel_parameters]") {
     }
 
     SECTION("Polynomial kernel configuration") {
-        json config = { { "kernel", "polynomial" },
-                        { "C", 5.0 },
-                        { "degree", 4 },
-                        { "gamma", 0.5 },
-                        { "coef0", 1.0 } };
+        json config = { { "kernel", "polynomial" }, { "C", 5.0 }, { "degree", 4 }, { "gamma", 0.5 }, { "coef0", 1.0 } };
 
         KernelParameters params(config);
 
@@ -193,11 +185,9 @@ TEST_CASE("KernelParameters JSON Serialization", "[unit][kernel_parameters]") {
     }
 
     SECTION("Round-trip JSON serialization") {
-        json original_config = {
-            { "kernel", "polynomial" }, { "C", 3.0 },         { "degree", 4 },
-            { "gamma", 0.25 },          { "coef0", 1.5 },     { "multiclass_strategy", "ovo" },
-            { "probability", true },    { "tolerance", 1e-5 }
-        };
+        json original_config = { { "kernel", "polynomial" }, { "C", 3.0 },         { "degree", 4 },
+                                 { "gamma", 0.25 },          { "coef0", 1.5 },     { "multiclass_strategy", "ovo" },
+                                 { "probability", true },    { "tolerance", 1e-5 } };
 
         KernelParameters params(original_config);
         auto serialized_config = params.get_parameters();

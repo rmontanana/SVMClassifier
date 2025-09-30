@@ -8,10 +8,7 @@ namespace svm_classifier {
 namespace {
 // Helper function to validate and extract numeric value from JSON
 template <typename T>
-T get_numeric_value(
-    const nlohmann::json& config,
-    const std::string& key,
-    const std::string& type_name) {
+T get_numeric_value(const nlohmann::json& config, const std::string& key, const std::string& type_name) {
     if (!config[key].is_number()) {
         throw std::invalid_argument(key + " must be a " + type_name);
     }
@@ -49,9 +46,8 @@ bool is_valid_gamma(double gamma) {
 } // anonymous namespace
 
 KernelParameters::KernelParameters()
-    : kernel_type_(KernelType::LINEAR), multiclass_strategy_(MulticlassStrategy::ONE_VS_REST),
-      C_(1.0), tolerance_(1e-3), max_iterations_(-1), probability_(false), cache_size_(200.0),
-      gamma_(-1.0) // Auto gamma
+    : kernel_type_(KernelType::LINEAR), multiclass_strategy_(MulticlassStrategy::ONE_VS_REST), C_(1.0),
+      tolerance_(1e-3), max_iterations_(-1), probability_(false), cache_size_(200.0), gamma_(-1.0) // Auto gamma
       ,
       degree_(3), coef0_(0.0) {}
 
@@ -67,8 +63,7 @@ void KernelParameters::set_parameters(const nlohmann::json& config) {
 
     // Set multiclass strategy
     if (config.contains("multiclass_strategy")) {
-        set_multiclass_strategy(
-            string_to_multiclass_strategy(get_string_value(config, "multiclass_strategy")));
+        set_multiclass_strategy(string_to_multiclass_strategy(get_string_value(config, "multiclass_strategy")));
     }
 
     // Set common parameters
@@ -115,8 +110,7 @@ void KernelParameters::set_parameters(const nlohmann::json& config) {
 
 nlohmann::json KernelParameters::get_parameters() const {
     nlohmann::json params = { { "kernel", kernel_type_to_string(kernel_type_) },
-                              { "multiclass_strategy",
-                                multiclass_strategy_to_string(multiclass_strategy_) },
+                              { "multiclass_strategy", multiclass_strategy_to_string(multiclass_strategy_) },
                               { "C", C_ },
                               { "tolerance", tolerance_ },
                               { "max_iterations", max_iterations_ },

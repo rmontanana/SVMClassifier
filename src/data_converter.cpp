@@ -15,9 +15,7 @@ DataConverter::~DataConverter() {
     cleanup();
 }
 
-std::unique_ptr<svm_problem> DataConverter::to_svm_problem(
-    const torch::Tensor& X,
-    const torch::Tensor& y) {
+std::unique_ptr<svm_problem> DataConverter::to_svm_problem(const torch::Tensor& X, const torch::Tensor& y) {
     validate_tensors(X, y);
 
     auto X_cpu = ensure_cpu_tensor(X);
@@ -53,9 +51,7 @@ std::unique_ptr<svm_problem> DataConverter::to_svm_problem(
     return problem;
 }
 
-std::unique_ptr<problem> DataConverter::to_linear_problem(
-    const torch::Tensor& X,
-    const torch::Tensor& y) {
+std::unique_ptr<problem> DataConverter::to_linear_problem(const torch::Tensor& X, const torch::Tensor& y) {
     validate_tensors(X, y);
 
     auto X_cpu = ensure_cpu_tensor(X);
@@ -118,8 +114,7 @@ torch::Tensor DataConverter::from_predictions(const std::vector<double>& predict
     return tensor;
 }
 
-torch::Tensor DataConverter::from_probabilities(
-    const std::vector<std::vector<double>>& probabilities) {
+torch::Tensor DataConverter::from_probabilities(const std::vector<std::vector<double>>& probabilities) {
     if (probabilities.empty()) {
         return torch::empty({ 0, 0 });
     }
@@ -138,8 +133,7 @@ torch::Tensor DataConverter::from_probabilities(
     return tensor;
 }
 
-torch::Tensor DataConverter::from_decision_values(
-    const std::vector<std::vector<double>>& decision_values) {
+torch::Tensor DataConverter::from_decision_values(const std::vector<std::vector<double>>& decision_values) {
     if (decision_values.empty()) {
         return torch::empty({ 0, 0 });
     }
@@ -167,8 +161,8 @@ void DataConverter::validate_tensors(const torch::Tensor& X, const torch::Tensor
         // Check that number of samples match
         if (X.size(0) != y.size(0)) {
             throw std::invalid_argument(
-                "Number of samples in X (" + std::to_string(X.size(0)) +
-                ") does not match number of labels in y (" + std::to_string(y.size(0)) + ")");
+                "Number of samples in X (" + std::to_string(X.size(0)) + ") does not match number of labels in y (" +
+                std::to_string(y.size(0)) + ")");
         }
     }
 
@@ -206,8 +200,7 @@ std::vector<std::vector<svm_node>> DataConverter::tensor_to_svm_nodes(const torc
     return nodes_storage;
 }
 
-std::vector<std::vector<feature_node>> DataConverter::tensor_to_linear_nodes(
-    const torch::Tensor& X) {
+std::vector<std::vector<feature_node>> DataConverter::tensor_to_linear_nodes(const torch::Tensor& X) {
     std::vector<std::vector<feature_node>> nodes_storage;
     nodes_storage.reserve(X.size(0));
 
@@ -332,8 +325,7 @@ void DataConverter::validate_tensor_properties(
 
     if (tensor.dim() != expected_dims) {
         throw std::invalid_argument(
-            name + " must have " + std::to_string(expected_dims) + " dimensions, got " +
-            std::to_string(tensor.dim()));
+            name + " must have " + std::to_string(expected_dims) + " dimensions, got " + std::to_string(tensor.dim()));
     }
 
     if (tensor.numel() == 0) {

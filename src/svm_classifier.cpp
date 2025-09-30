@@ -79,10 +79,9 @@ SVMClassifier::SVMClassifier(KernelType kernel, double C, MulticlassStrategy mul
 SVMClassifier::~SVMClassifier() = default;
 
 SVMClassifier::SVMClassifier(SVMClassifier&& other) noexcept
-    : params_(std::move(other.params_)),
-      multiclass_strategy_(std::move(other.multiclass_strategy_)),
-      data_converter_(std::move(other.data_converter_)), is_fitted_(other.is_fitted_),
-      n_features_(other.n_features_), training_metrics_(other.training_metrics_) {
+    : params_(std::move(other.params_)), multiclass_strategy_(std::move(other.multiclass_strategy_)),
+      data_converter_(std::move(other.data_converter_)), is_fitted_(other.is_fitted_), n_features_(other.n_features_),
+      training_metrics_(other.training_metrics_) {
     other.is_fitted_ = false;
     other.n_features_ = 0;
 }
@@ -125,14 +124,12 @@ torch::Tensor SVMClassifier::predict(const torch::Tensor& X) {
     validate_input(X, torch::Tensor(), true);
 
     auto predictions = multiclass_strategy_->predict(X, *data_converter_);
-    return data_converter_->from_predictions(
-        std::vector<double>(predictions.begin(), predictions.end()));
+    return data_converter_->from_predictions(std::vector<double>(predictions.begin(), predictions.end()));
 }
 
 torch::Tensor SVMClassifier::predict_proba(const torch::Tensor& X) {
     if (!supports_probability()) {
-        throw std::runtime_error(
-            "Probability prediction not supported. Set probability=true during training.");
+        throw std::runtime_error("Probability prediction not supported. Set probability=true during training.");
     }
 
     validate_input(X, torch::Tensor(), true);
@@ -178,8 +175,7 @@ EvaluationMetrics SVMClassifier::evaluate(const torch::Tensor& X, const torch::T
     metrics.confusion_matrix = calculate_confusion_matrix(y_true_vec, y_pred_vec);
 
     // Calculate precision, recall, and F1-score
-    auto [precision, recall, f1] =
-        calculate_metrics_from_confusion_matrix(metrics.confusion_matrix);
+    auto [precision, recall, f1] = calculate_metrics_from_confusion_matrix(metrics.confusion_matrix);
     metrics.precision = precision;
     metrics.recall = recall;
     metrics.f1_score = f1;
@@ -285,12 +281,10 @@ void SVMClassifier::load_model(const std::string& filename) {
 
     // Note: Full model loading would require serializing the actual SVM models
     // For now, this provides parameter persistence
-    throw std::runtime_error(
-        "Full model loading not yet implemented. Only parameter loading is supported.");
+    throw std::runtime_error("Full model loading not yet implemented. Only parameter loading is supported.");
 }
 
-std::vector<double>
-SVMClassifier::cross_validate(const torch::Tensor& X, const torch::Tensor& y, int cv) {
+std::vector<double> SVMClassifier::cross_validate(const torch::Tensor& X, const torch::Tensor& y, int cv) {
     validate_input(X, y, false);
 
     if (cv < 2) {
@@ -325,11 +319,8 @@ SVMClassifier::cross_validate(const torch::Tensor& X, const torch::Tensor& y, in
     return scores;
 }
 
-nlohmann::json SVMClassifier::grid_search(
-    const torch::Tensor& X,
-    const torch::Tensor& y,
-    const nlohmann::json& param_grid,
-    int cv) {
+nlohmann::json
+SVMClassifier::grid_search(const torch::Tensor& X, const torch::Tensor& y, const nlohmann::json& param_grid, int cv) {
     validate_input(X, y, false);
 
     auto param_combinations = generate_param_combinations(param_grid);
@@ -351,9 +342,7 @@ nlohmann::json SVMClassifier::grid_search(
         }
     }
 
-    return { { "best_params", best_params },
-             { "best_score", best_score },
-             { "cv_results", all_scores } };
+    return { { "best_params", best_params }, { "best_score", best_score }, { "cv_results", all_scores } };
 }
 
 torch::Tensor SVMClassifier::get_feature_importance() const {
@@ -378,10 +367,7 @@ void SVMClassifier::reset() {
     data_converter_->cleanup();
 }
 
-void SVMClassifier::validate_input(
-    const torch::Tensor& X,
-    const torch::Tensor& y,
-    bool check_fitted) {
+void SVMClassifier::validate_input(const torch::Tensor& X, const torch::Tensor& y, bool check_fitted) {
     if (check_fitted && !is_fitted_) {
         throw std::runtime_error(
             "This SVMClassifier instance is not fitted yet. "
@@ -393,8 +379,7 @@ void SVMClassifier::validate_input(
     if (check_fitted && X.size(1) != n_features_) {
         throw std::invalid_argument(
             "Number of features in X (" + std::to_string(X.size(1)) +
-            ") does not match number of features during training (" + std::to_string(n_features_) +
-            ")");
+            ") does not match number of features during training (" + std::to_string(n_features_) + ")");
     }
 }
 
@@ -468,16 +453,14 @@ SVMClassifier::split_for_cv(const torch::Tensor& X, const torch::Tensor& y, int 
     auto val_indices = all_indices.slice(0, val_start, val_end);
 
     // Training indices (everything except validation)
-    auto train_indices = torch::cat(
-        { all_indices.slice(0, 0, val_start), all_indices.slice(0, val_end, n_samples) });
+    auto train_indices = torch::cat({ all_indices.slice(0, 0, val_start), all_indices.slice(0, val_end, n_samples) });
 
     // Split data
-    return { X.index_select(0, train_indices), y.index_select(0, train_indices),
-             X.index_select(0, val_indices), y.index_select(0, val_indices) };
+    return { X.index_select(0, train_indices), y.index_select(0, train_indices), X.index_select(0, val_indices),
+             y.index_select(0, val_indices) };
 }
 
-std::vector<nlohmann::json> SVMClassifier::generate_param_combinations(
-    const nlohmann::json& param_grid) {
+std::vector<nlohmann::json> SVMClassifier::generate_param_combinations(const nlohmann::json& param_grid) {
     std::vector<nlohmann::json> combinations;
 
     // Extract parameter names and values
@@ -494,18 +477,18 @@ std::vector<nlohmann::json> SVMClassifier::generate_param_combinations(
     }
 
     // Generate all combinations using recursive approach
-    std::function<void(int, nlohmann::json&)> generate_combinations =
-        [&](int param_idx, nlohmann::json& current_params) {
-            if (static_cast<size_t>(param_idx) == param_names.size()) {
-                combinations.push_back(current_params);
-                return;
-            }
+    std::function<void(int, nlohmann::json&)> generate_combinations = [&](int param_idx,
+                                                                          nlohmann::json& current_params) {
+        if (static_cast<size_t>(param_idx) == param_names.size()) {
+            combinations.push_back(current_params);
+            return;
+        }
 
-            for (const auto& value : param_values[param_idx]) {
-                current_params[param_names[param_idx]] = value;
-                generate_combinations(param_idx + 1, current_params);
-            }
-        };
+        for (const auto& value : param_values[param_idx]) {
+            current_params[param_names[param_idx]] = value;
+            generate_combinations(param_idx + 1, current_params);
+        }
+    };
 
     nlohmann::json current_params;
     generate_combinations(0, current_params);

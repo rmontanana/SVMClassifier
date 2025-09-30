@@ -324,12 +324,8 @@ TEST_CASE("MulticlassStrategy Comparison", "[integration][multiclass_strategy]")
         REQUIRE(ovr_classes == ovo_classes); // Should have same classes
 
         for (size_t i = 0; i < ovr_predictions.size(); ++i) {
-            REQUIRE(
-                std::find(ovr_classes.begin(), ovr_classes.end(), ovr_predictions[i]) !=
-                ovr_classes.end());
-            REQUIRE(
-                std::find(ovo_classes.begin(), ovo_classes.end(), ovo_predictions[i]) !=
-                ovo_classes.end());
+            REQUIRE(std::find(ovr_classes.begin(), ovr_classes.end(), ovr_predictions[i]) != ovr_classes.end());
+            REQUIRE(std::find(ovo_classes.begin(), ovo_classes.end(), ovo_predictions[i]) != ovo_classes.end());
         }
     }
 
@@ -421,8 +417,7 @@ TEST_CASE("MulticlassStrategy Error Handling", "[unit][multiclass_strategy]") {
         // Test that set_C validates parameters properly
         params.set_kernel_type(KernelType::LINEAR);
 
-        REQUIRE_THROWS_AS(
-            params.set_C(-1.0), std::invalid_argument); // Should throw during parameter setting
+        REQUIRE_THROWS_AS(params.set_C(-1.0), std::invalid_argument); // Should throw during parameter setting
     }
 
     SECTION("Mismatched tensor dimensions") {

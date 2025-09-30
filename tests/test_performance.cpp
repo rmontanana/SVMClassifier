@@ -51,11 +51,10 @@ public:
 
     ~Benchmark() {
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time_);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time_);
 
-        std::cout << std::setw(40) << std::left << name_ << ": " << std::setw(8) << std::right
-                  << duration.count() << " ms" << std::endl;
+        std::cout << std::setw(40) << std::left << name_ << ": " << std::setw(8) << std::right << duration.count()
+                  << " ms" << std::endl;
     }
 
 private:

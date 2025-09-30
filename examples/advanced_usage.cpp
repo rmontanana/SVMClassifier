@@ -13,11 +13,8 @@ using json = nlohmann::json;
 /**
  * @brief Generate a more realistic multi-class dataset with noise
  */
-std::pair<torch::Tensor, torch::Tensor> generate_realistic_dataset(
-    int n_samples,
-    int n_features,
-    int n_classes,
-    double noise_factor = 0.1) {
+std::pair<torch::Tensor, torch::Tensor>
+generate_realistic_dataset(int n_samples, int n_features, int n_classes, double noise_factor = 0.1) {
     torch::manual_seed(42);
 
     // Create class centers
@@ -115,8 +112,8 @@ void demonstrate_hyperparameter_tuning() {
     auto X_test = X_full.slice(0, n_train);
     auto y_test = y_full.slice(0, n_train);
 
-    std::cout << "Dataset: " << X_train.size(0) << " train, " << X_test.size(0) << " test samples, "
-              << X_train.size(1) << " features" << std::endl;
+    std::cout << "Dataset: " << X_train.size(0) << " train, " << X_test.size(0) << " test samples, " << X_train.size(1)
+              << " features" << std::endl;
 
     std::vector<double> c_values = { 0.1, 1.0, 10.0, 100.0 };
 
@@ -130,8 +127,8 @@ void demonstrate_hyperparameter_tuning() {
         svm.fit(X_train, y_train);
         double accuracy = svm.score(X_test, y_test);
 
-        std::cout << std::setw(10) << std::fixed << std::setprecision(1) << c << std::setw(15)
-                  << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
+        std::cout << std::setw(10) << std::fixed << std::setprecision(1) << c << std::setw(15) << std::setprecision(2)
+                  << (accuracy * 100.0) << "%" << std::endl;
     }
 
     std::vector<double> gamma_values = { 0.01, 0.1, 1.0 };
@@ -187,8 +184,7 @@ void demonstrate_model_evaluation() {
         { { "kernel", "polynomial" }, { "degree", 3 }, { "C", 1.0 } }
     };
 
-    std::vector<std::string> model_names = { "Linear (OvR)", "Linear (OvO)", "RBF (OvR)",
-                                             "RBF (OvO)", "Polynomial" };
+    std::vector<std::string> model_names = { "Linear (OvR)", "Linear (OvO)", "RBF (OvR)", "RBF (OvO)", "Polynomial" };
 
     std::cout << "\n--- Training and Evaluating Models ---" << std::endl;
 
@@ -203,8 +199,7 @@ void demonstrate_model_evaluation() {
         auto start_time = std::chrono::high_resolution_clock::now();
         auto training_metrics = svm.fit(X_train, y_train);
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto training_duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        auto training_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
         std::cout << "Training time: " << training_duration.count() << " ms" << std::endl;
 
@@ -218,8 +213,7 @@ void demonstrate_model_evaluation() {
 
         // Prediction summary
         auto predictions = svm.predict(X_test);
-        std::cout << "\nPredictions completed for " << predictions.size(0) << " test samples"
-                  << std::endl;
+        std::cout << "\nPredictions completed for " << predictions.size(0) << " test samples" << std::endl;
     }
 }
 
@@ -267,17 +261,16 @@ void demonstrate_preprocessing_effects() {
     for (const auto& [method_name, X_processed] : preprocessing_methods) {
         auto X_train_slice = X_processed.slice(0, 0, n_train);
         auto y_train_slice = y.slice(0, 0, n_train);
-        auto X_test_proc = (method_name == "No Preprocessing") ? X_test_slice
-                           : (method_name == "Normalization [0,1]")
-                               ? normalize_features(X_test_slice)
-                               : standardize_features(X_test_slice);
+        auto X_test_proc = (method_name == "No Preprocessing")      ? X_test_slice
+                           : (method_name == "Normalization [0,1]") ? normalize_features(X_test_slice)
+                                                                    : standardize_features(X_test_slice);
 
         SVMClassifier svm(config);
         svm.fit(X_train_slice, y_train_slice);
         double accuracy = svm.score(X_test_proc, y_test);
 
-        std::cout << std::setw(20) << method_name << std::setw(15) << std::fixed
-                  << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
+        std::cout << std::setw(20) << method_name << std::setw(15) << std::fixed << std::setprecision(2)
+                  << (accuracy * 100.0) << "%" << std::endl;
     }
 
     std::cout << "\nKey Insights:" << std::endl;
@@ -303,8 +296,7 @@ void demonstrate_class_imbalance() {
     auto y0 = torch::zeros({ 500 }, torch::kInt32);
 
     // Class 1: 100 samples (minority)
-    auto X1 =
-        torch::randn({ 100, 8 }) + torch::tensor({ -1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0 });
+    auto X1 = torch::randn({ 100, 8 }) + torch::tensor({ -1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0 });
     auto y1 = torch::ones({ 100 }, torch::kInt32);
 
     // Class 2: 50 samples (very minority)
@@ -336,8 +328,8 @@ void demonstrate_class_imbalance() {
         { { "kernel", "rbf" }, { "C", 10.0 }, { "gamma", 0.1 }, { "multiclass_strategy", "ovo" } }
     };
 
-    std::vector<std::string> strategy_names = { "Linear (C=1.0, OvR)", "Linear (C=10.0, OvR)",
-                                                "RBF (C=1.0, OvR)", "RBF (C=10.0, OvO)" };
+    std::vector<std::string> strategy_names = { "Linear (C=1.0, OvR)", "Linear (C=10.0, OvR)", "RBF (C=1.0, OvR)",
+                                                "RBF (C=10.0, OvO)" };
 
     std::cout << "\n--- Strategy Comparison for Imbalanced Data ---" << std::endl;
 
@@ -360,16 +352,15 @@ void demonstrate_class_imbalance() {
                 total += metrics.confusion_matrix[class_idx][j];
             }
             double class_recall = (total > 0) ? static_cast<double>(tp) / total : 0.0;
-            std::cout << "  Class " << class_idx << " recall: " << std::fixed
-                      << std::setprecision(4) << class_recall * 100 << "%" << std::endl;
+            std::cout << "  Class " << class_idx << " recall: " << std::fixed << std::setprecision(4)
+                      << class_recall * 100 << "%" << std::endl;
         }
     }
 
     std::cout << "\nRecommendations for imbalanced data:" << std::endl;
     std::cout << "- Increase C parameter to give more weight to training errors" << std::endl;
     std::cout << "- Consider One-vs-One strategy for better minority class handling" << std::endl;
-    std::cout << "- Use class-specific evaluation metrics (precision, recall per class)"
-              << std::endl;
+    std::cout << "- Use class-specific evaluation metrics (precision, recall per class)" << std::endl;
     std::cout << "- Consider resampling techniques in preprocessing" << std::endl;
 }
 
@@ -393,17 +384,12 @@ int main() {
 
         std::cout << "\nKey Takeaways:" << std::endl;
         std::cout << "1. Hyperparameter tuning is crucial for optimal performance" << std::endl;
-        std::cout << "2. Feature preprocessing significantly affects RBF and polynomial kernels"
-                  << std::endl;
+        std::cout << "2. Feature preprocessing significantly affects RBF and polynomial kernels" << std::endl;
         std::cout << "3. Cross-validation provides robust performance estimates" << std::endl;
-        std::cout << "4. Different kernels and strategies work better for different data types"
-                  << std::endl;
-        std::cout << "5. Class imbalance requires special consideration in model selection"
-                  << std::endl;
-        std::cout << "6. Linear kernels are fastest and work well for high-dimensional data"
-                  << std::endl;
-        std::cout << "7. RBF kernels provide good general-purpose non-linear classification"
-                  << std::endl;
+        std::cout << "4. Different kernels and strategies work better for different data types" << std::endl;
+        std::cout << "5. Class imbalance requires special consideration in model selection" << std::endl;
+        std::cout << "6. Linear kernels are fastest and work well for high-dimensional data" << std::endl;
+        std::cout << "7. RBF kernels provide good general-purpose non-linear classification" << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
