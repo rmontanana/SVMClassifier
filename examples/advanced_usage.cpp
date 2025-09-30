@@ -1,10 +1,9 @@
 #include <svm_classifier/svm_classifier.hpp>
 #include <torch/torch.h>
 #include <iostream>
-#include <fstream>
-#include <random>
-#include <algorithm>
 #include <iomanip>
+#include <numeric>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 using namespace svm_classifier;
@@ -102,100 +101,57 @@ void print_evaluation_metrics(const EvaluationMetrics& metrics, const std::strin
 }
 
 /**
- * @brief Demonstrate comprehensive hyperparameter tuning
+ * @brief Demonstrate manual hyperparameter tuning
  */
 void demonstrate_hyperparameter_tuning()
 {
     std::cout << "\n" << std::string(60, '=') << std::endl;
-    std::cout << "COMPREHENSIVE HYPERPARAMETER TUNING EXAMPLE" << std::endl;
+    std::cout << "HYPERPARAMETER COMPARISON EXAMPLE" << std::endl;
     std::cout << std::string(60, '=') << std::endl;
 
-    // Generate dataset
-    auto [X, y] = generate_realistic_dataset(1000, 20, 4, 0.3);
+    auto [X_full, y_full] = generate_realistic_dataset(800, 10, 3, 0.3);
+    X_full = standardize_features(X_full);
 
-    // Standardize features
-    X = standardize_features(X);
+    int n_train = 600;
+    auto X_train = X_full.slice(0, 0, n_train);
+    auto y_train = y_full.slice(0, 0, n_train);
+    auto X_test = X_full.slice(0, n_train);
+    auto y_test = y_full.slice(0, n_train);
 
-    std::cout << "Dataset: " << X.size(0) << " samples, " << X.size(1)
-        << " features, " << torch::unique(y).size(0) << " classes" << std::endl;
+    std::cout << "Dataset: " << X_train.size(0) << " train, " << X_test.size(0)
+              << " test samples, " << X_train.size(1) << " features" << std::endl;
 
-    // Define comprehensive parameter grid
-    json param_grids = {
-        {
-            "name", "Linear SVM Grid"
-        },
-        {
-            "parameters", {
-                {"kernel", {"linear"}},
-                {"C", {0.01, 0.1, 1.0, 10.0, 100.0}},
-                {"multiclass_strategy", {"ovr", "ovo"}}
-            }
-        }
-    };
+    std::vector<double> c_values = {0.1, 1.0, 10.0, 100.0};
 
-    SVMClassifier svm;
+    std::cout << "\n--- Linear SVM C Parameter Comparison ---" << std::endl;
+    std::cout << std::setw(10) << "C" << std::setw(15) << "Accuracy" << std::endl;
+    std::cout << std::string(25, '-') << std::endl;
 
-    std::cout << "\n--- Linear SVM Hyperparameter Search ---" << std::endl;
-    auto linear_grid = param_grids["parameters"];
-    auto linear_results = svm.grid_search(X, y, linear_grid, 5);
+    for (double c : c_values) {
+        json config = {{"kernel", "linear"}, {"C", c}};
+        SVMClassifier svm(config);
+        svm.fit(X_train, y_train);
+        double accuracy = svm.score(X_test, y_test);
 
-    std::cout << "Best Linear SVM parameters:" << std::endl;
-    std::cout << linear_results["best_params"].dump(2) << std::endl;
-    std::cout << "Best CV score: " << std::fixed << std::setprecision(4)
-        << linear_results["best_score"].get<double>() * 100 << "%" << std::endl;
+        std::cout << std::setw(10) << std::fixed << std::setprecision(1) << c
+                  << std::setw(15) << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
+    }
 
-    // RBF parameter grid
-    json rbf_grid = {
-        {"kernel", {"rbf"}},
-        {"C", {0.1, 1.0, 10.0}},
-        {"gamma", {0.01, 0.1, 1.0, "auto"}},
-        {"multiclass_strategy", {"ovr", "ovo"}}
-    };
+    std::vector<double> gamma_values = {0.01, 0.1, 1.0};
 
-    std::cout << "\n--- RBF SVM Hyperparameter Search ---" << std::endl;
-    auto rbf_results = svm.grid_search(X, y, rbf_grid, 3);
+    std::cout << "\n--- RBF SVM Gamma Parameter Comparison (C=10.0) ---" << std::endl;
+    std::cout << std::setw(10) << "Gamma" << std::setw(15) << "Accuracy" << std::endl;
+    std::cout << std::string(25, '-') << std::endl;
 
-    std::cout << "Best RBF SVM parameters:" << std::endl;
-    std::cout << rbf_results["best_params"].dump(2) << std::endl;
-    std::cout << "Best CV score: " << std::fixed << std::setprecision(4)
-        << rbf_results["best_score"].get<double>() * 100 << "%" << std::endl;
+    for (double gamma : gamma_values) {
+        json config = {{"kernel", "rbf"}, {"C", 10.0}, {"gamma", gamma}};
+        SVMClassifier svm(config);
+        svm.fit(X_train, y_train);
+        double accuracy = svm.score(X_test, y_test);
 
-    // Polynomial parameter grid
-    json poly_grid = {
-        {"kernel", {"polynomial"}},
-        {"C", {0.1, 1.0, 10.0}},
-        {"degree", {2, 3, 4}},
-        {"gamma", {0.01, 0.1, "auto"}},
-        {"coef0", {0.0, 1.0}}
-    };
-
-    std::cout << "\n--- Polynomial SVM Hyperparameter Search ---" << std::endl;
-    auto poly_results = svm.grid_search(X, y, poly_grid, 3);
-
-    std::cout << "Best Polynomial SVM parameters:" << std::endl;
-    std::cout << poly_results["best_params"].dump(2) << std::endl;
-    std::cout << "Best CV score: " << std::fixed << std::setprecision(4)
-        << poly_results["best_score"].get<double>() * 100 << "%" << std::endl;
-
-    // Compare all models
-    std::cout << "\n--- Model Comparison Summary ---" << std::endl;
-    std::cout << std::setw(15) << "Model" << std::setw(12) << "CV Score" << std::setw(30) << "Best Parameters" << std::endl;
-    std::cout << std::string(57, '-') << std::endl;
-
-    std::cout << std::setw(15) << "Linear"
-        << std::setw(12) << std::fixed << std::setprecision(4)
-        << linear_results["best_score"].get<double>() * 100 << "%"
-        << std::setw(30) << "C=" + std::to_string(linear_results["best_params"]["C"].get<double>()) << std::endl;
-
-    std::cout << std::setw(15) << "RBF"
-        << std::setw(12) << std::fixed << std::setprecision(4)
-        << rbf_results["best_score"].get<double>() * 100 << "%"
-        << std::setw(30) << "C=" + std::to_string(rbf_results["best_params"]["C"].get<double>()) << std::endl;
-
-    std::cout << std::setw(15) << "Polynomial"
-        << std::setw(12) << std::fixed << std::setprecision(4)
-        << poly_results["best_score"].get<double>() * 100 << "%"
-        << std::setw(30) << "deg=" + std::to_string(rbf_results["best_params"]["degree"].get<int>()) << std::endl;
+        std::cout << std::setw(10) << std::fixed << std::setprecision(2) << gamma
+                  << std::setw(15) << std::setprecision(2) << (accuracy * 100.0) << "%" << std::endl;
+    }
 }
 
 /**
@@ -224,7 +180,7 @@ void demonstrate_model_evaluation()
     std::cout << "  Training: " << X_train.size(0) << " samples" << std::endl;
     std::cout << "  Testing:  " << X_test.size(0) << " samples" << std::endl;
     std::cout << "  Features: " << X_train.size(1) << std::endl;
-    std::cout << "  Classes:  " << torch::unique(y_train).size(0) << std::endl;
+    std::cout << "  Classes:  " << std::get<0>(at::_unique(y_train)).size(0) << std::endl;
 
     // Configure different models for comparison
     std::vector<json> model_configs = {
@@ -268,60 +224,9 @@ void demonstrate_model_evaluation()
         auto test_metrics = svm.evaluate(X_test, y_test);
         print_evaluation_metrics(test_metrics, "Test Set Performance");
 
-        // Cross-validation
-        std::cout << "\n--- Cross-Validation Results ---" << std::endl;
-        auto cv_scores = svm.cross_validate(X_train, y_train, 5);
-
-        double mean_cv = 0.0;
-        for (double score : cv_scores) {
-            mean_cv += score;
-        }
-        mean_cv /= cv_scores.size();
-
-        double std_cv = 0.0;
-        for (double score : cv_scores) {
-            std_cv += (score - mean_cv) * (score - mean_cv);
-        }
-        std_cv = std::sqrt(std_cv / cv_scores.size());
-
-        std::cout << "CV Scores: ";
-        for (size_t j = 0; j < cv_scores.size(); ++j) {
-            std::cout << std::fixed << std::setprecision(3) << cv_scores[j];
-            if (j < cv_scores.size() - 1) std::cout << ", ";
-        }
-        std::cout << std::endl;
-        std::cout << "Mean CV: " << std::fixed << std::setprecision(4) << mean_cv * 100 << "% ± " << std_cv * 100 << "%" << std::endl;
-
-        // Prediction analysis
+        // Prediction summary
         auto predictions = svm.predict(X_test);
-        std::cout << "\n--- Prediction Analysis ---" << std::endl;
-
-        // Count predictions per class
-        auto unique_preds = torch::unique(predictions);
-        std::cout << "Predicted classes: ";
-        for (int j = 0; j < unique_preds.size(0); ++j) {
-            std::cout << unique_preds[j].item<int>();
-            if (j < unique_preds.size(0) - 1) std::cout << ", ";
-        }
-        std::cout << std::endl;
-
-        // Test probability prediction if supported
-        if (svm.supports_probability()) {
-            std::cout << "Probability prediction: Supported" << std::endl;
-            auto probabilities = svm.predict_proba(X_test.slice(0, 0, 5));  // First 5 samples
-            std::cout << "Sample probabilities (first 5 samples):" << std::endl;
-            for (int j = 0; j < 5; ++j) {
-                std::cout << "  Sample " << j << ": ";
-                for (int k = 0; k < probabilities.size(1); ++k) {
-                    std::cout << std::fixed << std::setprecision(3)
-                        << probabilities[j][k].item<double>();
-                    if (k < probabilities.size(1) - 1) std::cout << ", ";
-                }
-                std::cout << std::endl;
-            }
-        } else {
-            std::cout << "Probability prediction: Not supported" << std::endl;
-        }
+        std::cout << "\nPredictions completed for " << predictions.size(0) << " test samples" << std::endl;
     }
 }
 
@@ -358,24 +263,29 @@ void demonstrate_preprocessing_effects()
 
     json config = { {"kernel", "rbf"}, {"C", 1.0}, {"gamma", 0.1} };
 
+    // Split data for testing
+    int n_train = 600;
+    auto X_test_slice = X_unscaled.slice(0, n_train);
+    auto y_test = y.slice(0, n_train);
+
     std::cout << "\n--- Preprocessing Method Comparison ---" << std::endl;
-    std::cout << std::setw(20) << "Method" << std::setw(15) << "CV Score" << std::setw(15) << "Training Time" << std::endl;
-    std::cout << std::string(50, '-') << std::endl;
+    std::cout << std::setw(20) << "Method" << std::setw(15) << "Test Accuracy" << std::endl;
+    std::cout << std::string(35, '-') << std::endl;
 
     for (const auto& [method_name, X_processed] : preprocessing_methods) {
+        auto X_train_slice = X_processed.slice(0, 0, n_train);
+        auto y_train_slice = y.slice(0, 0, n_train);
+        auto X_test_proc = (method_name == "No Preprocessing") ? X_test_slice :
+                           (method_name == "Normalization [0,1]") ? normalize_features(X_test_slice) :
+                           standardize_features(X_test_slice);
+
         SVMClassifier svm(config);
-
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto cv_scores = svm.cross_validate(X_processed, y, 5);
-        auto end_time = std::chrono::high_resolution_clock::now();
-
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-        double mean_cv = std::accumulate(cv_scores.begin(), cv_scores.end(), 0.0) / cv_scores.size();
+        svm.fit(X_train_slice, y_train_slice);
+        double accuracy = svm.score(X_test_proc, y_test);
 
         std::cout << std::setw(20) << method_name
-            << std::setw(15) << std::fixed << std::setprecision(4) << mean_cv * 100 << "%"
-            << std::setw(15) << duration.count() << " ms" << std::endl;
+                  << std::setw(15) << std::fixed << std::setprecision(2)
+                  << (accuracy * 100.0) << "%" << std::endl;
     }
 
     std::cout << "\nKey Insights:" << std::endl;
