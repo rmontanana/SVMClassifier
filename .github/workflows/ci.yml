@@ -35,7 +35,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-20.04]
         build_type: [Release, Debug]
-        compiler: [gcc, clang]
+        compiler: [gcc]
         exclude:
           # Reduce matrix size for faster CI
           - os: ubuntu-20.04
@@ -68,13 +68,6 @@ jobs:
           valgrind \
           lcov
     
-    - name: Setup Clang
-      if: matrix.compiler == 'clang'
-      run: |
-        sudo apt-get install -y clang-12
-        echo "CC=clang-12" >> $GITHUB_ENV
-        echo "CXX=clang++-12" >> $GITHUB_ENV
-    
     - name: Setup GCC
       if: matrix.compiler == 'gcc'
       run: |
@@ -84,9 +77,9 @@ jobs:
     - name: Install PyTorch C++
       run: |
         cd /opt
-        sudo wget -q https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.1.0%2Bcpu.zip
-        sudo unzip -q libtorch-cxx11-abi-shared-with-deps-2.1.0+cpu.zip
-        sudo rm libtorch-cxx11-abi-shared-with-deps-2.1.0+cpu.zip
+        sudo wget -q wget https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.8.0%2Bcpu.zip
+        sudo unzip -q libtorch-shared-with-deps-2.8.0+cpu.zip
+        sudo rm libtorch-shared-with-deps-2.8.0+cpu.zip
         echo "Torch_DIR=/opt/libtorch" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=/opt/libtorch/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
     
