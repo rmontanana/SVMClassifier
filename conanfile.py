@@ -10,7 +10,9 @@ class SVMClassifierConan(ConanFile):
     license = "MIT"
     author = "Ricardo Montañana Gómez"
     url = "https://gitea.rmontanana.es/rmontanana/SVMClassifier"
-    description = "A C++ library for Support Vector Machine classification using PyTorch"
+    description = (
+        "A C++ library for Support Vector Machine classification using PyTorch"
+    )
     topics = ("svm", "machine-learning", "pytorch", "classification")
     settings = "os", "compiler", "build_type", "arch"
     options = {
@@ -37,7 +39,9 @@ class SVMClassifierConan(ConanFile):
     def set_version(self):
         """Extract version from CMakeLists.txt"""
         cmake_file = load(self, os.path.join(self.recipe_folder, "CMakeLists.txt"))
-        version_match = re.search(r"project\([^)]*VERSION\s+(\d+\.\d+\.\d+)", cmake_file)
+        version_match = re.search(
+            r"project\([^)]*VERSION\s+(\d+\.\d+\.\d+)", cmake_file
+        )
         if version_match:
             self.version = version_match.group(1)
         else:
@@ -52,14 +56,12 @@ class SVMClassifierConan(ConanFile):
             self.options.rm_safe("fPIC")
 
     def requirements(self):
-        # Note: PyTorch/libtorch is expected to be provided by the system
-        # Users must set CMAKE_PREFIX_PATH to their libtorch installation
-        pass
+        self.requires("nlohmann_json/3.11.3")
+        self.requires("libtorch/2.7.1")
+        # self.requires("libsvm/333")
 
     def build_requirements(self):
-        # Dependencies fetched by CMake's FetchContent
-        # nlohmann_json, libsvm, liblinear, catch2
-        pass
+        self.test_requires("catch2/3.4.0")
 
     def layout(self):
         cmake_layout(self)

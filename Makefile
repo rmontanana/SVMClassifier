@@ -24,28 +24,19 @@ INFO := ℹ️
 WARN := ⚠️
 SPARKLES := ✨
 
+BUILD_DEBUG := build_debug
+BUILD_RELEASE := build_release
+
 # Configuration
-BUILD_DIR := build
+BUILD_DIR := ${BUILD_RELEASE}
 BUILD_TYPE := Release
-CMAKE_PREFIX_PATH ?= /opt/homebrew/lib/python3.11/site-packages/torch
-JOBS := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+COVERAGE := OFF
+# Set the number of parallel jobs to the number of available processors minus 7
+CPUS := $(shell getconf _NPROCESSORS_ONLN 2>/dev/null \
+                 || nproc --all 2>/dev/null \
+                 || sysctl -n hw.ncpu)
+JOBS := $(shell n=$(CPUS); [ $${n} -gt 7 ] && echo $$((n-7)) || echo 1)
 
-# Detect PyTorch installation
-TORCH_PATHS := \
-	./libtorch \
-	/opt/homebrew/lib/python3.11/site-packages/torch \
-	/opt/homebrew/lib/python3.12/site-packages/torch \
-	/usr/local/lib/python3.11/site-packages/torch \
-	$(shell python3 -c "import torch; print(torch.utils.cmake_prefix_path)" 2>/dev/null)
-
-define find_torch
-$(foreach path,$(TORCH_PATHS),$(if $(wildcard $(path)/share/cmake/Torch),$(path),))
-endef
-
-DETECTED_TORCH := $(firstword $(call find_torch))
-ifneq ($(DETECTED_TORCH),)
-	CMAKE_PREFIX_PATH := $(abspath $(DETECTED_TORCH))
-endif
 
 # Default target
 .PHONY: all
@@ -92,7 +83,6 @@ help:
 	@printf "  $(YELLOW)conan-test$(NC)    - $(TEST) Test Conan package\n\n"
 	@printf "$(BOLD)$(PURPLE)$(GEAR) Configuration:$(NC)\n"
 	@printf "  $(CYAN)BUILD_TYPE$(NC)=$(GREEN)$(BUILD_TYPE)$(NC)\n"
-	@printf "  $(CYAN)CMAKE_PREFIX_PATH$(NC)=$(GREEN)$(CMAKE_PREFIX_PATH)$(NC)\n"
 	@printf "  $(CYAN)JOBS$(NC)=$(GREEN)$(JOBS)$(NC)\n"
 
 # Build targets
@@ -102,23 +92,25 @@ build: $(BUILD_DIR)/Makefile
 	@cmake --build $(BUILD_DIR) --config $(BUILD_TYPE) --parallel $(JOBS)
 	@printf "$(BOLD)$(GREEN)$(CHECK) Build completed successfully!$(NC)\n"
 
+$(BUILD_DEBUG)/Makefile:
+	@$(MAKE) debug
+
 .PHONY: debug
 debug:
 	@printf "$(BOLD)$(YELLOW)$(GEAR) Building in debug mode...$(NC)\n"
-	@$(MAKE) build BUILD_TYPE=Debug BUILD_DIR=build_debug
+	@$(MAKE) build BUILD_TYPE=Debug BUILD_DIR=$(BUILD_DEBUG) COVERAGE=ON
 
 $(BUILD_DIR)/Makefile:
 	@printf "$(BOLD)$(CYAN)$(GEAR) Configuring CMake build...$(NC)\n"
+	@rm -fr $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake .. \
-		-DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
-		-DCMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) \
-		-DBUILD_DOCUMENTATION=ON
+	@conan install . --build=missing -of $(BUILD_DIR) -s build_type=$(BUILD_TYPE)
+	@cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_TOOLCHAIN_FILE=$(BUILD_DIR)/build/$(BUILD_TYPE)/generators/conan_toolchain.cmake -DBUILD_DOCUMENTATION=ON -DENABLE_COVERAGE=$(COVERAGE)
 
 .PHONY: clean
 clean:
-	@printf "$(BOLD)$(YELLOW)$(CLEAN) Cleaning build directory...$(NC)\n"
-	@rm -rf $(BUILD_DIR)
+	@printf "$(BOLD)$(YELLOW)$(CLEAN) Cleaning build directories...$(NC)\n"
+	@rm -rf $(BUILD_RELEASE) $(BUILD_DEBUG)
 	@printf "$(BOLD)$(GREEN)$(CHECK) Clean completed!$(NC)\n"
 
 .PHONY: rebuild
@@ -172,7 +164,7 @@ test-profile: build
 	@cd $(BUILD_DIR) && $(MAKE) test_profile
 
 .PHONY: coverage
-coverage:
+coverage: $(BUILD_DEBUG)/Makefile
 	@printf "$(BOLD)$(CYAN)$(TEST) Setting up code coverage analysis...$(NC)\n"
 	@# Check if required tools are available
 	@which gcov >/dev/null 2>&1 || (printf "$(BOLD)$(RED)$(CROSS) Error: gcov not found. Please install gcc or clang development tools.$(NC)\n" && exit 1)
@@ -180,26 +172,19 @@ coverage:
 	@which genhtml >/dev/null 2>&1 || (printf "$(BOLD)$(RED)$(CROSS) Error: genhtml not found. Please install lcov package.$(NC)\n" && exit 1)
 	@printf "$(BOLD)$(GREEN)$(CHECK) All coverage tools available$(NC)\n"
 	@printf "$(BOLD)$(BLUE)$(GEAR) Configuring Debug build with coverage...$(NC)\n"
-	@rm -rf build_coverage
-	@mkdir -p build_coverage
-	@cd build_coverage && cmake .. \
-		-DCMAKE_BUILD_TYPE=Debug \
-		-DCMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) \
-		-DBUILD_DOCUMENTATION=ON \
-		-DENABLE_COVERAGE=ON
 	@printf "$(BOLD)$(BLUE)$(ROCKET) Building with coverage instrumentation...$(NC)\n"
-	@cmake --build build_coverage --config Debug --parallel $(JOBS)
 	@printf "$(BOLD)$(GREEN)$(TEST) Running tests with coverage collection...$(NC)\n"
-	@cd build_coverage && ulimit -s 8192 && ctest --output-on-failure --parallel $(JOBS)
+	@cd $(BUILD_DEBUG) && ulimit -s 8192 && ctest --output-on-failure --parallel $(JOBS)
 	@printf "$(BOLD)$(CYAN)$(GEAR) Collecting coverage data...$(NC)\n"
-	@cd build_coverage && lcov --capture --directory . --base-directory .. --output-file coverage.info --ignore-errors inconsistent,unsupported,format,source
-	@cd build_coverage && lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/tests/*' '*/libtorch/*' '*/src/catch2/*' --output-file coverage_filtered.info --ignore-errors inconsistent,source
-	@cd build_coverage && genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors category,inconsistent,source
+	@cd $(BUILD_DEBUG) && lcov --capture --directory . --base-directory .. --output-file coverage.info --ignore-errors inconsistent,unsupported,format,source
+	@cd $(BUILD_DEBUG) && lcov --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' '*/.conan2/*' --output-file coverage_filtered.info --ignore-errors inconsistent,source
+	@cd $(BUILD_DEBUG) && genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors category,inconsistent,source
 	@printf "$(BOLD)$(CYAN)$(SPARKLES) Coverage report generated!$(NC)\n"
+	@lcov -l $(BUILD_DEBUG)/coverage_filtered.info --ignore-errors inconsistent,source
 	@printf "$(BOLD)$(GREEN)$(INFO) Coverage summary:$(NC)\n"
-	@cd build_coverage && lcov --summary coverage_filtered.info --ignore-errors inconsistent,source | grep -E "(lines|functions|branches)"
-	@printf "$(BOLD)$(BLUE)$(BOOK) HTML report: $(CYAN)build_coverage/coverage_html/index.html$(NC)\n"
-	@printf "$(BOLD)$(YELLOW)$(INFO) Open with: open/xdg-open build_coverage/coverage_html/index.html$(NC)\n"
+	@cd $(BUILD_DEBUG) && lcov --summary coverage_filtered.info --ignore-errors inconsistent,source | grep -E "(lines|functions|branches)"
+	@printf "$(BOLD)$(BLUE)$(BOOK) HTML report: $(CYAN)$(BUILD_DEBUG)/coverage_html/index.html$(NC)\n"
+	@printf "$(BOLD)$(YELLOW)$(INFO) Open with: open/xdg-open $(BUILD_DEBUG)/coverage_html/index.html$(NC)\n"
 
 # Documentation targets
 .PHONY: docs
@@ -247,7 +232,6 @@ info:
 	@printf "  $(CYAN)Build Type$(NC): $(GREEN)$(BUILD_TYPE)$(NC)\n"
 	@printf "  $(CYAN)Build Directory$(NC): $(GREEN)$(BUILD_DIR)$(NC)\n"
 	@printf "  $(CYAN)Jobs$(NC): $(GREEN)$(JOBS)$(NC)\n"
-	@printf "  $(CYAN)CMAKE_PREFIX_PATH$(NC): $(GREEN)$(CMAKE_PREFIX_PATH)$(NC)\n"
 	@printf "  $(CYAN)Detected PyTorch$(NC): $(GREEN)$(DETECTED_TORCH)$(NC)\n\n"
 	@printf "$(BOLD)$(GREEN)$(GEAR) Available Tools:$(NC)\n"
 	@which cmake >/dev/null 2>&1 && printf "  $(GREEN)$(CHECK) CMake$(NC): $$(cmake --version | head -n1)\n" || printf "  $(RED)$(CROSS) CMake$(NC): Not found\n"
@@ -277,7 +261,7 @@ deps:
 .PHONY: clean-all
 clean-all:
 	@printf "$(BOLD)$(RED)$(CLEAN) Cleaning all build directories and dependencies...$(NC)\n"
-	@rm -rf build build_Debug build_Release build_coverage
+	@rm -rf build $(BUILD_DEBUG)
 	@rm -rf _deps
 	@printf "$(BOLD)$(GREEN)$(CHECK) All build artifacts cleaned!$(NC)\n"
 
@@ -286,7 +270,7 @@ clean-all:
 conan-create:
 	@printf "$(BOLD)$(PURPLE)$(ROCKET) Creating Conan package...$(NC)\n"
 	@printf "$(BOLD)$(CYAN)$(INFO) Version will be extracted from CMakeLists.txt$(NC)\n"
-	@CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan create . --build=missing
+	@conan create . --build=missing
 	@printf "$(BOLD)$(GREEN)$(CHECK) Conan package created successfully!$(NC)\n"
 
 .PHONY: conan-export
@@ -299,19 +283,19 @@ conan-export:
 conan-install:
 	@printf "$(BOLD)$(CYAN)$(GEAR) Installing dependencies with Conan...$(NC)\n"
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan install .. --build=missing
+	@cd $(BUILD_DIR) && conan install .. --build=missing
 	@printf "$(BOLD)$(GREEN)$(CHECK) Conan dependencies installed!$(NC)\n"
 
 .PHONY: conan-build
 conan-build:
 	@printf "$(BOLD)$(YELLOW)$(ROCKET) Building with Conan...$(NC)\n"
-	@CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan build .
+	@conan build .
 	@printf "$(BOLD)$(GREEN)$(CHECK) Conan build completed!$(NC)\n"
 
 .PHONY: conan-test
 conan-test:
 	@printf "$(BOLD)$(GREEN)$(TEST) Testing Conan package...$(NC)\n"
-	@CMAKE_PREFIX_PATH=$(CMAKE_PREFIX_PATH) conan test test_package/conanfile.py svmclassifier
+	@conan test test_package/conanfile.py svmclassifier
 	@printf "$(BOLD)$(GREEN)$(CHECK) Conan package test passed!$(NC)\n"
 
 # Aliases for convenience
@@ -335,3 +319,4 @@ profile: test-profile
 
 .PHONY: package
 package: conan-create
+

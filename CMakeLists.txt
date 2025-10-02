@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.27)
 project(SVMClassifier
     VERSION 1.0.0
     LANGUAGES C CXX
@@ -44,37 +44,28 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # Find required packages
-find_package(Torch REQUIRED)
-message(STATUS "Found Torch: ${TORCH_VERSION}")
-message(STATUS "Torch include dirs: ${TORCH_INCLUDE_DIRS}")
-message(STATUS "Torch libraries: ${TORCH_LIBRARIES}")
+find_package(Torch CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-# Set policy for FetchContent
+# Find packages provided by Conan
+# Add Conan generators to CMAKE_PREFIX_PATH if building with Conan
+if(EXISTS "${CMAKE_BINARY_DIR}/generators")
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
+elseif(EXISTS "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/generators")
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/generators")
+endif()
+
+find_package(nlohmann_json REQUIRED)
+find_package(Catch2 REQUIRED)
+
+# Set policy for FetchContent (for libsvm and liblinear)
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
 include(FetchContent)
 
-# Fetch nlohmann/json
-set(JSON_Install ON CACHE BOOL "Install nlohmann-json when my project is installed" FORCE)
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
-)
-FetchContent_MakeAvailable(nlohmann_json)
-
-# Fetch Catch2 for testing
-FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG v3.4.0
-)
-FetchContent_MakeAvailable(Catch2)
-
-# Fetch libsvm
+# Fetch libsvm (not available in Conan, compiled directly into library)
 FetchContent_Declare(
     libsvm
     GIT_REPOSITORY https://github.com/cjlin1/libsvm.git
@@ -82,7 +73,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(libsvm)
 
-# Fetch liblinear  
+# Fetch liblinear (not available in Conan, compiled directly into library)
 FetchContent_Declare(
     liblinear
     GIT_REPOSITORY https://github.com/cjlin1/liblinear.git
@@ -147,7 +138,7 @@ endforeach()
 # Link libraries
 target_link_libraries(svm_classifier 
     PUBLIC 
-        ${TORCH_LIBRARIES}
+        torch::torch
     PRIVATE
         nlohmann_json::nlohmann_json
 )
