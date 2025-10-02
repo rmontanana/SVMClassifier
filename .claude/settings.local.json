@@ -19,7 +19,11 @@
       "Bash(clang-format:*)",
       "Bash(gh run list:*)",
       "WebFetch(domain:github.com)",
-      "Bash(xargs clang-format:*)"
+      "Bash(xargs clang-format:*)",
+      "Bash(test:*)",
+      "Bash(python3:*)",
+      "Bash(./test_version)",
+      "Bash(./svm_classifier_tests \"SVMClassifier Version\" -s)"
     ],
     "deny": [],
     "ask": []

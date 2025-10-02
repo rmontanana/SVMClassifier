@@ -32,9 +32,7 @@
 *.out
 *.app
 
-build_Release
-build_Debug
-build_coverage
-build
-libtorch
+build_debug
+build_release
 Testing
+CMakeUserPresets.json
