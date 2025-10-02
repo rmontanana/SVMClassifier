@@ -57,29 +57,8 @@ endif()
 
 find_package(nlohmann_json REQUIRED)
 find_package(Catch2 REQUIRED)
-
-# Set policy for FetchContent (for libsvm and liblinear)
-if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
-include(FetchContent)
-
-# Fetch libsvm (not available in Conan, compiled directly into library)
-FetchContent_Declare(
-    libsvm
-    GIT_REPOSITORY https://github.com/cjlin1/libsvm.git
-    GIT_TAG v332
-)
-FetchContent_MakeAvailable(libsvm)
-
-# Fetch liblinear (not available in Conan, compiled directly into library)
-FetchContent_Declare(
-    liblinear
-    GIT_REPOSITORY https://github.com/cjlin1/liblinear.git
-    GIT_TAG v249
-)
-FetchContent_MakeAvailable(liblinear)
+find_package(libsvm REQUIRED)
+find_package(liblinear REQUIRED)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -100,48 +79,23 @@ set(HEADERS
     include/svm_classifier/types.hpp
 )
 
-# Add external sources directly to our library
-set(EXTERNAL_SOURCES)
-
-# Add libsvm sources
-if(EXISTS "${libsvm_SOURCE_DIR}/svm.cpp")
-    list(APPEND EXTERNAL_SOURCES "${libsvm_SOURCE_DIR}/svm.cpp")
-endif()
-
-# Add liblinear sources
-if(EXISTS "${liblinear_SOURCE_DIR}/linear.cpp")
-    list(APPEND EXTERNAL_SOURCES "${liblinear_SOURCE_DIR}/linear.cpp")
-endif()
-
-if(EXISTS "${liblinear_SOURCE_DIR}/newton.cpp")
-    list(APPEND EXTERNAL_SOURCES "${liblinear_SOURCE_DIR}/newton.cpp")
-elseif(EXISTS "${liblinear_SOURCE_DIR}/tron.cpp")
-    list(APPEND EXTERNAL_SOURCES "${liblinear_SOURCE_DIR}/tron.cpp")
-endif()
-
-# Add BLAS sources
-if(EXISTS "${liblinear_SOURCE_DIR}/blas")
-    file(GLOB BLAS_C_FILES "${liblinear_SOURCE_DIR}/blas/*.c")
-    list(APPEND EXTERNAL_SOURCES ${BLAS_C_FILES})
-endif()
-
 # Create library with all sources
-add_library(svm_classifier STATIC ${SOURCES} ${HEADERS} ${EXTERNAL_SOURCES})
-
-# Set language properties for different file types
-foreach(source_file ${EXTERNAL_SOURCES})
-    if(source_file MATCHES "\\.c$")
-        set_source_files_properties(${source_file} PROPERTIES LANGUAGE C)
-    endif()
-endforeach()
+add_library(svm_classifier STATIC ${SOURCES} ${HEADERS})
 
 # Link libraries
-target_link_libraries(svm_classifier 
-    PUBLIC 
+target_link_libraries(svm_classifier
+    PUBLIC
         torch::torch
+        libsvm::libsvm
     PRIVATE
         nlohmann_json::nlohmann_json
 )
+
+# Workaround: Conan liblinear package doesn't properly export the library
+# So we need to manually link it for both Release and Debug builds
+get_target_property(LIBLINEAR_LINK_DIRS liblinear::linear INTERFACE_LINK_DIRECTORIES)
+target_link_libraries(svm_classifier PUBLIC ${LIBLINEAR_LINK_DIRS}/liblinear.a)
+target_link_libraries(svm_classifier PUBLIC liblinear::linear)
 
 # Set include directories
 target_include_directories(svm_classifier
@@ -151,9 +105,6 @@ target_include_directories(svm_classifier
         $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${libsvm_SOURCE_DIR}
-        ${liblinear_SOURCE_DIR}
-        ${liblinear_SOURCE_DIR}/blas
 )
 
 # Compiler-specific options

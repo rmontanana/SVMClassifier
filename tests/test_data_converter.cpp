@@ -9,8 +9,8 @@
 #include <torch/torch.h>
 
 // Include the actual headers for complete struct definitions
-#include "linear.h" // liblinear structures
-#include "svm.h"    // libsvm structures
+#include "linear.h"     // liblinear structures
+#include "svm/svm.h"    // libsvm structures
 
 using namespace svm_classifier;
 

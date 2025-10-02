@@ -177,7 +177,7 @@ coverage: $(BUILD_DEBUG)/Makefile
 	@cd $(BUILD_DEBUG) && ulimit -s 8192 && ctest --output-on-failure --parallel $(JOBS)
 	@printf "$(BOLD)$(CYAN)$(GEAR) Collecting coverage data...$(NC)\n"
 	@cd $(BUILD_DEBUG) && lcov --capture --directory . --base-directory .. --output-file coverage.info --ignore-errors inconsistent,unsupported,format,source
-	@cd $(BUILD_DEBUG) && lcov --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' '*/.conan2/*' --output-file coverage_filtered.info --ignore-errors inconsistent,source
+	@cd $(BUILD_DEBUG) && lcov --remove coverage.info '/usr/*' '*/tests/*' '*/.conan2/*' --output-file coverage_filtered.info --ignore-errors inconsistent,source
 	@cd $(BUILD_DEBUG) && genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors category,inconsistent,source
 	@printf "$(BOLD)$(CYAN)$(SPARKLES) Coverage report generated!$(NC)\n"
 	@lcov -l $(BUILD_DEBUG)/coverage_filtered.info --ignore-errors inconsistent,source

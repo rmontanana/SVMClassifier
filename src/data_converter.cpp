@@ -4,8 +4,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "linear.h" // liblinear
-#include "svm.h"    // libsvm
+#include "linear.h"     // liblinear
+#include "svm/svm.h"    // libsvm
 
 namespace svm_classifier {
 

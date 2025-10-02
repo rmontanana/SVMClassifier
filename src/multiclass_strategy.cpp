@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "linear.h" // liblinear
-#include "svm.h"    // libsvm
+#include "linear.h"     // liblinear
+#include "svm/svm.h"    // libsvm
 
 namespace svm_classifier {
 

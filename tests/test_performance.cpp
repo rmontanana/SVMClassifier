@@ -14,8 +14,8 @@
 // Include the actual headers for complete struct definitions
 #include <nlohmann/json.hpp>
 
-#include "linear.h" // liblinear structures
-#include "svm.h"    // libsvm structures
+#include "linear.h"     // liblinear structures
+#include "svm/svm.h"    // libsvm structures
 
 using namespace svm_classifier;
 using json = nlohmann::json;

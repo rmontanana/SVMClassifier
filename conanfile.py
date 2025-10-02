@@ -58,7 +58,8 @@ class SVMClassifierConan(ConanFile):
     def requirements(self):
         self.requires("nlohmann_json/3.11.3")
         self.requires("libtorch/2.7.1")
-        # self.requires("libsvm/333")
+        self.requires("libsvm/333")
+        self.requires("liblinear/2.49")
 
     def build_requirements(self):
         self.test_requires("catch2/3.4.0")

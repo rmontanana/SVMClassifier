@@ -36,3 +36,5 @@ build_debug
 build_release
 Testing
 CMakeUserPresets.json
+.claude/settings.local.json
+
