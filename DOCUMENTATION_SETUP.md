@@ -6,7 +6,6 @@ This document summarizes the documentation system setup for the SVM Classifier C
 
 ### New Files
 - `Doxyfile.in` - Doxygen configuration template with CMake variables
-- `build_docs.sh` - Standalone documentation build script
 
 ### Modified Files
 - `CMakeLists.txt` - Added Doxygen target and configuration
@@ -39,6 +38,8 @@ BUILD_DOCUMENTATION=ON   # Enable documentation installation
 ```bash
 cmake --build build --target doxygen    # Build documentation
 cmake --build build --target docs       # Alias for doxygen
+cmake --build build --target clean_docs # Clean documentation
+cmake --build build --target open_docs  # Build and open in browser
 ```
 
 ## 🛠️ Usage Examples
@@ -55,19 +56,16 @@ cmake --build . --target doxygen
 # Documentation will be in build/docs/html/
 ```
 
-### Using the Build Script
+### Using CMake Targets
 ```bash
 # Simple build
-./build_docs.sh
-
-# Build and open in browser
-./build_docs.sh --open
+cd build && make docs
 
 # Clean and rebuild
-./build_docs.sh --clean --open
+cd build && make clean_docs && make docs
 
-# Verbose output
-./build_docs.sh --verbose
+# Build and open in browser
+cd build && make open_docs
 ```
 
 ### Installation with Documentation

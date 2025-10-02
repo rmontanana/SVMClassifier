@@ -272,7 +272,7 @@ This ensures optimal performance for each kernel type while maintaining a unifie
 ## Acknowledgments
 
 - **libsvm**: Chih-Chung Chang and Chih-Jen Lin
-- **liblinear**: Fan et al.
+- **liblinear**: R.-E. Fan et al.
 - **PyTorch**: Facebook AI Research
 - **nlohmann/json**: Niels Lohmann
 - **Catch2**: Phil Nash and contributors

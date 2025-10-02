@@ -202,14 +202,60 @@ if(BUILD_DOCUMENTATION OR DOXYGEN_FOUND)
         # Create output directory
         file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
         
-        # Add custom target for documentation
+        # Add custom target for documentation with enhanced feedback
         add_custom_target(doxygen
+            # Clean documentation if it exists (optional clean step)
+            COMMAND ${CMAKE_COMMAND} -E echo "Building SVM Classifier C++ Documentation"
+            COMMAND ${CMAKE_COMMAND} -E echo "Using Doxygen version: ${DOXYGEN_VERSION}"
+            COMMAND ${CMAKE_COMMAND} -E echo "Graphviz found: ${DOXYGEN_DOT_FOUND}"
+
+            # Build documentation
+            COMMAND ${CMAKE_COMMAND} -E echo "Building documentation..."
             COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_BINARY_DIR}/Doxyfile"
+
+            # Verify documentation was generated
+            COMMAND ${CMAKE_COMMAND} -E echo "Verifying documentation generation..."
+            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Documentation built successfully!"
+
+            # Check and report documentation size (Linux/Unix only)
+            COMMAND ${CMAKE_COMMAND} -E chdir "${DOXYGEN_OUTPUT_DIR}/html" ${CMAKE_COMMAND} -E echo "Documentation generated in: ${DOXYGEN_OUTPUT_DIR}/html/"
+
+            # Report warnings if any
+            COMMAND ${CMAKE_COMMAND} -E echo "Checking for documentation warnings..."
+            COMMAND test ! -s "${DOXYGEN_OUTPUT_DIR}/doxygen_warnings.log" && ${CMAKE_COMMAND} -E cmake_echo_color --green "No warnings generated" || ${CMAKE_COMMAND} -E cmake_echo_color --yellow "Warning: Documentation has warnings (see ${DOXYGEN_OUTPUT_DIR}/doxygen_warnings.log)"
+
+            # Summary
+            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --green "Documentation build completed!"
+            COMMAND ${CMAKE_COMMAND} -E echo "Documentation location: ${DOXYGEN_OUTPUT_DIR}/html/"
+            COMMAND ${CMAKE_COMMAND} -E echo "Main page: ${DOXYGEN_OUTPUT_DIR}/html/index.html"
+            COMMAND ${CMAKE_COMMAND} -E echo ""
+            COMMAND ${CMAKE_COMMAND} -E echo "Next steps:"
+            COMMAND ${CMAKE_COMMAND} -E echo "  - Open ${DOXYGEN_OUTPUT_DIR}/html/index.html in a web browser"
+            COMMAND ${CMAKE_COMMAND} -E echo "  - Use 'make doxygen' or 'cmake --build . --target doxygen' to rebuild"
+
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM
         )
-        
+
+        # Add custom target to clean documentation
+        add_custom_target(clean_docs
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "${DOXYGEN_OUTPUT_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Documentation cleaned"
+            COMMENT "Cleaning documentation directory"
+            VERBATIM
+        )
+
+        # Add custom target to open documentation in browser
+        add_custom_target(open_docs
+            COMMAND ${CMAKE_COMMAND} -E echo "Opening documentation in browser..."
+            # Try different browser commands based on platform
+            COMMAND bash -c "if command -v xdg-open >/dev/null 2>&1; then xdg-open '${DOXYGEN_INDEX_FILE}'; elif command -v open >/dev/null 2>&1; then open '${DOXYGEN_INDEX_FILE}'; elif command -v start >/dev/null 2>&1; then start '${DOXYGEN_INDEX_FILE}'; else echo 'Could not detect browser. Please open manually: ${DOXYGEN_INDEX_FILE}'; fi"
+            DEPENDS doxygen
+            COMMENT "Opening documentation in default browser"
+            VERBATIM
+        )
+
         # Add custom target alias for convenience
         add_custom_target(docs DEPENDS doxygen)
         

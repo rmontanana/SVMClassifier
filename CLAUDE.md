@@ -25,7 +25,6 @@ make examples               # Example programs
 ### Automated Build Scripts
 - `./install.sh` - Complete installation script with dependency management
 - `./validate_build.sh` - Comprehensive build validation and testing
-- `./build_docs.sh` - Generate Doxygen documentation
 
 ### Testing Commands
 ```bash
@@ -44,10 +43,16 @@ valgrind --tool=memcheck --leak-check=full ./svm_classifier_tests "[unit]"
 ### Documentation Generation
 ```bash
 # Generate docs (requires Doxygen)
-cmake --build . --target doxygen
+make docs                    # or: cmake --build . --target doxygen
 
-# Or use the helper script
-./build_docs.sh --open
+# Clean documentation before building
+make clean_docs
+
+# Build and open in browser
+make open_docs
+
+# From project root (shorthand)
+cd build && make docs
 ```
 
 ## Architecture Overview

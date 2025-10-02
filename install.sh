@@ -129,9 +129,6 @@ print_status "PyTorch version: $TORCH_VERSION"
 if [ -f "validate_build.sh" ]; then
     chmod +x validate_build.sh
 fi
-if [ -f "build_docs.sh" ]; then
-    chmod +x build_docs.sh
-fi
 if [ -f "troubleshoot_cmake.sh" ]; then
     chmod +x troubleshoot_cmake.sh
 fi
@@ -361,7 +358,8 @@ echo "  - CMake: find_package(SVMClassifier REQUIRED)"
 echo
 echo "Documentation:"
 echo "  - Build docs: cmake --build build --target doxygen"
-echo "  - Or use: ./build_docs.sh --open"
+echo "  - Or use: cd build && make docs"
+echo "  - Open docs: cd build && make open_docs"
 echo
 echo "Environment:"
 echo "  export LD_LIBRARY_PATH=$TORCH_DIR/lib:\$LD_LIBRARY_PATH"

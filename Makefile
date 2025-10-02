@@ -194,9 +194,9 @@ docs: $(BUILD_DIR)/Makefile
 	@printf "$(BOLD)$(GREEN)$(CHECK) Documentation generated successfully!$(NC)\n"
 
 .PHONY: docs-open
-docs-open: docs
+docs-open: $(BUILD_DIR)/Makefile
 	@printf "$(BOLD)$(CYAN)$(BOOK) Opening documentation...$(NC)\n"
-	@./build_docs.sh --open
+	@cd $(BUILD_DIR) && $(MAKE) open_docs
 
 # Development targets
 .PHONY: format

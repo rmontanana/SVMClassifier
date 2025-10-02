@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The C++ library lives in `src/` with matching headers in `include/svm_classifier/`. Add new public APIs to the header folder and back them with implementations under `src/`. Tests reside in `tests/` and follow the `test_*.cpp` naming; shared fixtures go in `test_main.cpp`. Examples demonstrating common workflows are under `examples/`, while CMake helpers stay in `cmake/`. Generated artifacts such as `build/`, `build_docs/`, and coverage outputs should be ignored in commits.
+The C++ library lives in `src/` with matching headers in `include/svm_classifier/`. Add new public APIs to the header folder and back them with implementations under `src/`. Tests reside in `tests/` and follow the `test_*.cpp` naming; shared fixtures go in `test_main.cpp`. Examples demonstrating common workflows are under `examples/`, while CMake helpers stay in `cmake/`. Generated artifacts such as `build/`, and coverage outputs should be ignored in commits.
 
 ## Build, Test, and Development Commands
 Run `./install.sh --build-type Debug` to provision dependencies and create a debug-ready build tree; add `--verbose` when troubleshooting. For manual builds, use `cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/libtorch -DCMAKE_BUILD_TYPE=Release`, then `cmake --build build -j$(nproc)`. Execute `./validate_build.sh --performance` before opening a pull request; it wraps configure, compile, tests, and optional checks. When iterating quickly, drop into `build/` and invoke `ctest --output-on-failure` or run `./svm_classifier_tests "[unit]"` to target a tag.
